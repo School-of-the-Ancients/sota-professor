@@ -1,8 +1,12 @@
 # Prompt restoration validation — October 21, 2026
 
-Target: local `sota-beta-openai`, branch `feat/openai-text-school`.
-All changes remain uncommitted; no deployment, push, merge, issue closure,
-credential/access/billing changes or Matrix/Supabase integration occurred.
+Restoration was developed in local `sota-beta-openai` on
+`feat/openai-text-school` and committed as `6eeb566`. A clean source checkpoint
+is now pushed privately to `School-of-the-Ancients/sota-professor`, branch
+`checkpoint/subscription-beta`; the prepared handoff follow-up is `0b9d46e`.
+No deployment, merge, issue closure, credential/access/billing changes or live
+Matrix/Supabase integration occurred. See the checkpoint and final runtime
+sections below for the distinction between published source and served code.
 
 ## Automated evidence
 
@@ -117,3 +121,21 @@ after that. The already-restored 3107 comparison app remains running with its
 existing archives. The prepared follow-up lives in the private sota-professor
 source checkout and is validated by the checks above; it has not been forced
 onto the user's current comparison tab.
+
+## Final runtime readiness after reconnection
+
+The connection reset stopped the two comparison processes. They were restarted
+as hidden background processes under the same already-signed-in Windows account,
+with their original archive paths. Both http://127.0.0.1:3107/ and
+http://127.0.0.1:3108/ returned HTTP 200. The 3107 provider status again confirmed
+native codex-chatgpt configuration and requested model gpt-6.1-sol; no new login,
+credentials, paid call or archive migration was involved.
+
+The served 3107 code is the seven-area restoration from the original worktree
+checkpoint 6eeb566. Port 3108 retains the separate synthetic validation lesson.
+The private sota-professor source includes the later handoff-contract follow-up
+0b9d46e; it was not silently substituted into either archive or live browser tab.
+The exact current checkpoint build passed again after reconnect, emitting
+index-BQV7Mfhy.js. Browser control was not available for a final tab refresh;
+prior real Chrome-loop evidence remains distinct from this HTTP/native-status
+readiness check. No additional live teaching calls were repeated.

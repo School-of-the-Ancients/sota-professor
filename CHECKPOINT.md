@@ -40,3 +40,10 @@ pending status and no execution. The original 3107 comparison server and user
 archives remain in their original worktree; this checkout contains no learner
 archive. Browser reattachment was unavailable at the final refresh, so no forced
 reload or data migration was attempted.
+
+After reconnection, both preserved comparison URLs (3107 real archive, 3108
+synthetic validation) returned HTTP 200 and 3107 native Codex status was configured.
+They serve the original restoration checkpoint; the later handoff preparation is
+in this source checkout, not silently swapped into the user's running archive.
+The final current-source build passed again. See the validation record for exact
+served/source distinctions and the browser-control limitation.
