@@ -1,3 +1,5 @@
+New quests now prepare one focused educational exhibit request alongside the mentor introduction. The full saved prompt is visible and editable; Matrix/image/Blender execution remains not connected. Older quests offer an explicit preparation button. See [automatic preparation validation](docs/AUTOMATIC_EXHIBIT_VALIDATION.md) and [Matrix integration recommendation](docs/MATRIX_INTEGRATION_RECOMMENDATION.md).
+
 ## ChatGPT subscription beta rebuild (local phase one)
 
 The default entry now uses `src/school/SchoolApp.tsx` with a local server-side

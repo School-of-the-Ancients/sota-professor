@@ -27,6 +27,8 @@ export function mockProvider() {
       this.calls.push({ kind, context: structuredClone(context) });
       if (this.fail) throw new Error('private upstream detail');
       if (kind === 'plan') return structuredClone(plan);
+      if (kind === 'exhibit') return { kind: 'artifact', title: 'Algorithm sequence cards', description: 'Three cards illustrating an ordered sequence of operations.', objectiveId: context.quest.objectives[0].id,
+        learningIntent: 'Help the learner trace the operation sequence.', interaction: { requirement: 'none', description: 'A static explanatory exhibit only.', capabilities: [] } };
       if (kind === 'match') return { mentorId: 'ada_lovelace', suitable: true, reason: plan.mentor.rationale, caveats: ['Modern programming extends beyond her lifetime.'], alternatives: [{ mentorId: 'aristotle', reason: 'Structured logic.' }] };
       if (kind === 'assess') return { summary: 'Insufficient learner evidence for all objectives.', objectives: context.objectives.map(objective => ({ objectiveId: objective.id, status: 'insufficient_evidence', evidence: [], gaps: ['An independent explanation is missing.'], nextSteps: ['Explain a new example.'] })), limitations: ['Model review of a short conversation only.'] };
       if (kind === 'quiz') {

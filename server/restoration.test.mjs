@@ -67,17 +67,18 @@ test('bounded presentation prompts are pending then honestly unavailable, never 
   let session = await begin(provider);
   provider.generate = async () => ({ text: 'I have requested an illustrative artifact; it has not been created.', suggestions: [], presentationRequests: [{ kind: 'artifact', title: 'Analytical Engine sequence cards', description: 'Cards illustrating three ordered operations.', objectiveId: 'sequence' }] });
   session = await action(provider, session, 'message', { text: 'Please request an illustration.' });
-  assert.equal(session.presentations[0].status, 'pending');
-  assert.match(session.presentations[0].prompt, /Museum-style academic object study/);
-  assert.match(session.presentations[0].prompt, /not verified historical evidence/);
-  session = await action(provider, session, 'presentation', { requestId: session.presentations[0].id });
-  assert.equal(session.presentations[0].status, 'unavailable');
-  assert(!('runtimeId' in session.presentations[0]));
-  for (const malformed of [{ ...session.presentations[0], status: 'confirmed', runtimeId: 'fake' }, { kind: 'lab', title: 'Lab', description: 'A proposed lab.', objectiveId: 'invented' }]) {
+  const requested = session.presentations.at(-1);
+  assert.equal(requested.status, 'pending');
+  assert.match(requested.prompt, /Museum-style academic object study/);
+  assert.match(requested.prompt, /not verified historical evidence/);
+  session = await action(provider, session, 'presentation', { requestId: requested.id });
+  assert.equal(session.presentations.at(-1).status, 'unavailable');
+  assert(!('runtimeId' in session.presentations.at(-1)));
+  for (const malformed of [{ ...requested, status: 'confirmed', runtimeId: 'fake' }, { kind: 'lab', title: 'Lab', description: 'A proposed lab.', objectiveId: 'invented' }]) {
     provider.generate = async () => ({ text: 'Request only.', suggestions: [], presentationRequests: [malformed] });
     await assert.rejects(action(provider, session, 'message', { text: 'Another request.' }), /invalid presentation/);
   }
-  const original = session.presentations[0];
+  const original = session.presentations.at(-1);
   assert.equal(original.status, 'unavailable');
 });
 

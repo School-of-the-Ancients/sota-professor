@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { createSession, advanceSession, publicSession, requireValue, SchoolError } from './teaching.mjs';
 import { createTeacher, teacherRoster } from './mentors.mjs';
 import { findTeacher } from '../src/school/personas.mjs';
+import { ExhibitPreparer } from './exhibit-preparation.mjs';
 
 const COOKIE = 'sota-local-learner';
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
@@ -20,16 +21,18 @@ async function readBody(req) {
 }
 
 export function createSchoolApi({ store, provider, now = Date.now }) {
+  const preparations = new ExhibitPreparer({ store, provider });
   const rates = new Map();
   let active = 0;
   let globalRate = { start: now(), count: 0 };
-  return async (req, res, next = () => {}) => {
+  const handler = async (req, res, next = () => {}) => {
     if (!req.url?.startsWith('/api/school')) return next();
     const send = (status, value) => {
       res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
       res.end(JSON.stringify(value));
     };
     let counted = false;
+    let ticket = null;
     try {
       // Local prototype only: defend against DNS rebinding and cross-site subscription use.
       const host = req.headers.host ?? '';
@@ -71,7 +74,7 @@ export function createSchoolApi({ store, provider, now = Date.now }) {
         }, { readOnly: req.method === 'GET' });
         return send(req.method === 'POST' ? 201 : 200, result);
       }
-      const match = path.match(new RegExp(`^/api/school/sessions/(${UUID})(?:/(message|quiz|answers|assess|presentation))?$`));
+      const match = path.match(new RegExp(`^/api/school/sessions/(${UUID})(?:/(message|quiz|answers|assess|presentation|presentation-edit|exhibit-prepare))?$`));
       if (req.method === 'GET' && path === '/api/school/sessions') {
         const list = await store.transaction(owner, data => ({ value: data.sessions.map(session => ({ id: session.id, title: session.title,
           mentorName: session.mentor.name, status: session.status, updatedAt: session.updatedAt })).reverse() }), { readOnly: true });
@@ -81,27 +84,37 @@ export function createSchoolApi({ store, provider, now = Date.now }) {
         const body = await readBody(req);
         const session = await store.transaction(owner, async data => {
           requireValue(data.sessions.length < 50, 422, 'This local browser has reached its limit of 50 quests. Export and preserve your learning records before starting another archive.');
-          const created = await createSession(provider, body, data.teachers || []);
+          const created = await createSession(provider, body, data.teachers || [], selected => { ticket = preparations.start(owner, selected); });
           data.sessions.push(created);
-          return { write: true, value: publicSession(created) };
+          return { write: true, value: created };
         });
-        return send(201, session);
+        preparations.publish(ticket);
+        return send(201, preparations.snapshot(session, owner));
       }
       requireValue(match, 404, 'School endpoint not found.');
       const body = req.method === 'POST' ? await readBody(req) : null;
       const session = await store.transaction(owner, async data => {
         const index = data.sessions.findIndex(session => session.id === match[1]);
         requireValue(index >= 0, 404, 'Session not found in this browser archive.');
-        if (req.method === 'GET' && !match[2]) return { value: publicSession(data.sessions[index]) };
+        if (req.method === 'GET' && !match[2]) return { value: data.sessions[index] };
         requireValue(req.method === 'POST' && match[2], 405, 'Method not allowed.');
+        if (match[2] === 'exhibit-prepare') {
+          const request = data.sessions[index].presentations?.find(item => item.origin === 'initial');
+          requireValue(!request || !preparations.jobs.has(`${owner}:${request.preparation?.token}`), 409, 'The initial exhibit request is already preparing. No duplicate job was started.');
+        }
         const updated = await advanceSession(provider, data.sessions[index], match[2], body);
+        if (match[2] === 'exhibit-prepare') ticket = preparations.start(owner, updated);
         data.sessions[index] = updated;
-        return { write: true, value: publicSession(updated) };
+        return { write: true, value: updated };
       }, { readOnly: req.method === 'GET' });
-      return send(200, session);
+      preparations.publish(ticket);
+      return send(200, preparations.snapshot(session, owner));
     } catch (error) {
+      preparations.abandon(ticket);
       send(error instanceof SchoolError ? error.status : 500,
         { error: error instanceof SchoolError ? error.message : 'The local server could not save this request. Reopen the session to check its state before retrying.' });
     } finally { if (counted) active--; }
   };
+  handler.preparations = preparations;
+  return handler;
 }

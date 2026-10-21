@@ -129,3 +129,22 @@ it('keeps conversation evidence separate from quiz results and exposes honest pr
   fireEvent.click(screen.getByRole('button', { name: 'Review my conversation evidence' }));
   await waitFor(() => expect(schoolApi.action).toHaveBeenLastCalledWith(expect.objectContaining({ revision: 2 }), 'assess', {}));
 });
+
+it('does not apply an old preparation poll after moving to a different quest', async () => {
+  let resolvePoll: (value: SchoolSession) => void = () => {};
+  const pending: SchoolSession = { ...session, presentations: [{ id: 'initial-request', kind: 'artifact', title: 'Old exhibit', description: 'Old description', objectiveId: 'sequence', prompt: 'Old saved prompt', status: 'pending', reason: 'Preparing', createdAt: session.createdAt, origin: 'initial', version: 1, preparation: { status: 'preparing', token: 'old-token', fingerprint: 'old-fingerprint' } }] };
+  window.history.replaceState(null, '', `/#session=${session.id}`);
+  vi.mocked(schoolApi.open).mockResolvedValueOnce(pending).mockImplementationOnce(() => new Promise(resolve => { resolvePoll = resolve; }));
+  const next: SchoolSession = { ...session, id: '00000000-0000-4000-8000-000000000002', title: 'A different quest', presentations: [] };
+  vi.mocked(schoolApi.create).mockResolvedValue(next);
+  render(<SchoolApp />);
+  await screen.findByText('Old saved prompt');
+  await waitFor(() => expect(schoolApi.open).toHaveBeenCalledTimes(2), { timeout: 2000 });
+  fireEvent.click(screen.getByRole('button', { name: '+ Begin a new quest' }));
+  fireEvent.change(screen.getByLabelText('Your question or learning goal'), { target: { value: 'Explore another question' } });
+  fireEvent.click(screen.getByRole('button', { name: /Create my learning quest/ }));
+  await screen.findByRole('heading', { name: 'A different quest' });
+  resolvePoll({ ...pending, presentationRevision: 2, presentations: pending.presentations!.map(request => ({ ...request, prompt: 'Late stale result', preparation: { ...request.preparation!, status: 'ready' } })) });
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'A different quest' })).toBeInTheDocument());
+  expect(screen.queryByText('Late stale result')).not.toBeInTheDocument();
+});

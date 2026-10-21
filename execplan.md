@@ -73,3 +73,19 @@ runtimes, preserving source differences and archive hashes. No live media or
 Matrix work. See docs/TESLA_ELIGIBILITY_FIX.md. The intended future scene-prep
 trigger (figure plus objective, asynchronous alongside introduction) is recorded
 in docs/OPERATOR_HANDOFF.md only; no jobs are enabled.
+
+### Automatic focused exhibit preparation and editor
+
+After plan/matcher selection, create one durable focused draft and start a
+bounded text-only exhibit operation alongside the introduction. Never wait for
+that operation before returning the professor's opening. Persist prompt/status,
+allow full-prompt edits, reject late results after edits/context changes, and
+avoid replay/duplicates on reload. Use a separate presentation revision and
+short background store writes so lesson/quiz revisions and user contributions
+are preserved. Interrupted preparation retains the draft and needs explicit
+retry. Existing quests are not silently regenerated; they offer an explicit
+Prepare button. Matrix stays unavailable. The source inspection/recommended
+first embodied-professor slice is docs/MATRIX_INTEGRATION_RECOMMENDATION.md.
+No remote push is authorized by this task; the earlier documentation push denial
+remains in effect. Local commits and deliberate archive-preserving runtime
+updates are allowed.

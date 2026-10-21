@@ -3,6 +3,7 @@ import { restoreMentor } from '../src/school/personas.mjs';
 import { reviewMentor, teacherRoster } from './mentors.mjs';
 import { presentationRecords, checkPresentation } from './presentation.mjs';
 import { assessConversation } from './assessment.mjs';
+import { initialExhibit, editPresentation } from './exhibit-preparation.mjs';
 
 export class SchoolError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -88,7 +89,7 @@ function applyTurn(session, turn) {
   session.presentations = [...(session.presentations || []), ...records];
 }
 
-export async function createSession(provider, input, customTeachers = []) {
+export async function createSession(provider, input, customTeachers = [], onSelected = () => {}) {
   const keys = Object.hasOwn(input || {}, 'preferences') ? ['goal', 'mentor', 'preferences'] : ['goal', 'mentor'];
   requireValue(exact(input, keys) && text(input.goal, 2000) && typeof input.mentor === 'string' && input.mentor.length <= 160,
     400, 'Enter a learning goal (up to 2,000 characters) and an optional historical mentor.');
@@ -102,8 +103,10 @@ export async function createSession(provider, input, customTeachers = []) {
     messages: [], suggestions: [], status: 'learning', reviewCompleted: false, quiz: null, attempts: [],
     assessments: [], presentations: [],
   };
-  const opening = validateTurn(await provider.generate('teach', { ...context(session), task: 'Introduce the quest with a useful explanation and concrete example suited to learner preferences. A brief diagnostic question is optional. No mastery has yet been demonstrated.' }));
-  applyTurn(session, opening);
+  initialExhibit(session);
+  onSelected(session);
+  const opening = validateTurn(await provider.generate('teach', { ...context(session), task: 'Introduce the quest with a useful explanation and concrete example suited to learner preferences. A brief diagnostic question is optional. No mastery has yet been demonstrated. One focused exhibit request is being prepared separately; return an empty presentationRequests array for this introduction.' }));
+  applyTurn(session, { ...opening, presentationRequests: [] });
   return session;
 }
 
@@ -125,6 +128,13 @@ export async function advanceSession(provider, existing, action, input) {
     requireValue(exact(input, ['revision']), 400, 'Invalid conversation assessment request.');
     requireValue((session.assessments?.length || 0) < 10, 422, 'This quest has reached its conversation review limit.');
     session.assessments = [...(session.assessments || []), await assessConversation(provider, session)];
+  } else if (action === 'presentation-edit') {
+    editPresentation(session, input);
+  } else if (action === 'exhibit-prepare') {
+    requireValue(exact(input, ['revision']), 400, 'Invalid exhibit preparation request.');
+    const existingRequest = session.presentations?.find(item => item.origin === 'initial');
+    requireValue(!existingRequest || existingRequest.preparation?.status !== 'ready', 409, 'The initial exhibit prompt is already prepared. Edit the saved prompt instead.');
+    initialExhibit(session);
   } else if (action === 'presentation') {
     requireValue(exact(input, ['revision', 'requestId']) && text(input.requestId, 80), 400, 'Invalid presentation availability request.');
     checkPresentation(session, input.requestId);

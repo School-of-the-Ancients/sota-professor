@@ -52,6 +52,7 @@ export interface SchoolSession {
   mentorReview?: { reason: string; caveats: string[]; alternatives: { mentorId: string; name: string; reason: string }[] };
   assessments?: ConversationAssessment[];
   presentations?: PresentationRequest[];
+  presentationRevision?: number;
 }
 
 // Future presentation adapters consume inert requests. Teaching has no authoring tools.
@@ -69,6 +70,11 @@ export interface PresentationRequest {
   learningIntent?: string;
   interaction?: InteractionRequirement;
   receipt?: PresentationReceipt;
+  origin?: 'initial';
+  version?: number;
+  promptEdited?: boolean;
+  promptSource?: 'draft' | 'codex' | 'user';
+  preparation?: { status: 'preparing' | 'ready' | 'error'; token: string; fingerprint: string };
 }
 export type InteractionCapability = 'move' | 'rotate' | 'select' | 'measure' | 'simulate';
 export interface InteractionRequirement {

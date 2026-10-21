@@ -29,7 +29,13 @@ const SchoolApp: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState('');
+  const [exhibitRefreshError, setExhibitRefreshError] = useState('');
   const end = useRef<HTMLDivElement>(null);
+  const currentSession = useRef(session);
+  const busyRef = useRef(busy);
+  currentSession.current = session;
+  busyRef.current = busy;
+  const preparingExhibit = session?.presentations?.some(request => request.preparation?.status === 'preparing') || false;
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +55,30 @@ const SchoolApp: React.FC = () => {
   }, []);
 
   useEffect(() => { end.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' }); }, [session?.messages.length]);
+  useEffect(() => {
+    if (!session || !preparingExhibit) return;
+    setExhibitRefreshError('');
+    const id = session.id;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const refresh = async () => {
+      try {
+        if (!busyRef.current) {
+          const next = await schoolApi.open(id);
+          if (!stopped && !busyRef.current && currentSession.current?.id === id) {
+            setExhibitRefreshError('');
+            setSession(previous => previous?.id === id && next.revision >= previous.revision
+              && (next.presentationRevision || 0) >= (previous.presentationRevision || 0) ? next : previous);
+          }
+        }
+      } catch {
+        if (!stopped && currentSession.current?.id === id) setExhibitRefreshError('Could not refresh preparation status. The last saved draft remains visible; no execution is confirmed.');
+      }
+      if (!stopped) timer = setTimeout(refresh, 1500);
+    };
+    timer = setTimeout(refresh, 500);
+    return () => { stopped = true; clearTimeout(timer); };
+  }, [session?.id, preparingExhibit]);
 
   const acceptSession = (next: SchoolSession) => {
     setSession(next);
@@ -59,14 +89,16 @@ const SchoolApp: React.FC = () => {
   };
 
   const run = async (operation: () => Promise<SchoolSession>, clearDraft = false) => {
-    if (busy) return;
+    if (busyRef.current) return false;
+    busyRef.current = true;
     setBusy(true);
     setError('');
     try {
       acceptSession(await operation());
       if (clearDraft) setDraft('');
-    } catch (error) { setError(error instanceof Error ? error.message : 'The request failed. Reopen the session to check what was saved.'); }
-    finally { setBusy(false); }
+      return true;
+    } catch (error) { setError(error instanceof Error ? error.message : 'The request failed. Reopen the session to check what was saved.'); return false; }
+    finally { busyRef.current = false; setBusy(false); }
   };
 
   const sendMessage = (text: string) => session && text.trim() && run(() => schoolApi.action(session, 'message', { text }), true);
@@ -216,7 +248,8 @@ const SchoolApp: React.FC = () => {
             {session.status !== 'complete' && <div className="flex flex-wrap gap-2" aria-label="Suggested replies">{session.suggestions.map((suggestion, index) => <button key={index} className={`${secondary} text-left text-xs`} disabled={busy} onClick={() => setDraft(suggestion)}>{suggestion}</button>)}</div>}
             <p className="text-xs text-stone-500">Saved after each successful turn. Your full conversation is restored for your mentor when you return. No microphone required.</p>
           </section>}
-          <LearningReview session={session} disabled={busy || !provider?.configured} onAction={(action, fields = {}) => void run(() => schoolApi.action(session, action, fields))} />
+          {exhibitRefreshError && preparingExhibit && <p role="status" className="text-sm text-amber-100">{exhibitRefreshError}</p>}
+          <LearningReview session={session} disabled={busy || !provider?.configured} onAction={(action, fields = {}) => run(() => schoolApi.action(session, action, fields))} />
           {busy && <p role="status" className="text-sm text-amber-100">Working on this request. Your saved session remains available.</p>}
         </div>}
         <footer className="mt-10 border-t border-stone-800 pt-5 text-xs leading-relaxed text-stone-500">Historically inspired teaching, with room for questions and correction. AI can make mistakes; verify consequential claims. Teaching uses native Codex with your ChatGPT sign-in on this computer and sends your goal and saved lesson context to OpenAI. Your plan, model and workspace limits apply. Keep the local School server running; this is a personal local app. No API-key fallback, ChatGPT history import, images or live voice are enabled.</footer>
