@@ -1,5 +1,19 @@
 this is a living document
 
+### Local Operator action connection
+
+Preserve the full UI and current Leonardo archive. Add explicit structured
+image/background requests, exact frame/source/channel checks and server-verified
+Matrix job receipts. Reuse the existing concept/panorama store and selected-image
+build/load path; no new generator, implicit background apply or mandatory 3D.
+Persist only matching current prompt-version results; reopen watches old jobs,
+not generation. Teacher remains tool-disabled and receives bounded truthful
+status context. Run focused security/idempotency, existing suites, mock-backed
+desktop and one bounded native subscription image check. Use a separate 3110
+candidate archive; do not restart or rewrite the user app at 3108. Local commits
+only, no push/merge/deployment/credentials/network-permission changes. See
+docs/OPERATOR_CONNECTION.md for evidence and remaining hardware/spatial limits.
+
 ## October 21, 2026: standalone subscription rebuild
 
 Selected repository: sota-beta. Isolated branch: `feat/openai-text-school`, based

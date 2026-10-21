@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:matrix": "vite build --base /professor/ --outDir dist-matrix",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",

@@ -3,6 +3,7 @@ import { createSession, advanceSession, publicSession, requireValue, SchoolError
 import { createTeacher, teacherRoster } from './mentors.mjs';
 import { findTeacher } from '../src/school/personas.mjs';
 import { ExhibitPreparer } from './exhibit-preparation.mjs';
+import { acceptOperatorResult } from './operator.mjs';
 
 const COOKIE = 'sota-local-learner';
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
@@ -74,7 +75,7 @@ export function createSchoolApi({ store, provider, now = Date.now }) {
         }, { readOnly: req.method === 'GET' });
         return send(req.method === 'POST' ? 201 : 200, result);
       }
-      const match = path.match(new RegExp(`^/api/school/sessions/(${UUID})(?:/(message|quiz|answers|assess|presentation|presentation-edit|exhibit-prepare))?$`));
+      const match = path.match(new RegExp(`^/api/school/sessions/(${UUID})(?:/(message|quiz|answers|assess|presentation|presentation-edit|exhibit-prepare|operator-result))?$`));
       if (req.method === 'GET' && path === '/api/school/sessions') {
         const list = await store.transaction(owner, data => ({ value: data.sessions.map(session => ({ id: session.id, title: session.title,
           mentorName: session.mentor.name, status: session.status, updatedAt: session.updatedAt })).reverse() }), { readOnly: true });
@@ -98,6 +99,10 @@ export function createSchoolApi({ store, provider, now = Date.now }) {
         requireValue(index >= 0, 404, 'Session not found in this browser archive.');
         if (req.method === 'GET' && !match[2]) return { value: data.sessions[index] };
         requireValue(req.method === 'POST' && match[2], 405, 'Method not allowed.');
+        if (match[2] === 'operator-result') {
+          const changed = await acceptOperatorResult(data.sessions[index], body);
+          return { write: changed, value: data.sessions[index] };
+        }
         if (match[2] === 'exhibit-prepare') {
           const request = data.sessions[index].presentations?.find(item => item.origin === 'initial');
           requireValue(!request || !preparations.jobs.has(`${owner}:${request.preparation?.token}`), 409, 'The initial exhibit request is already preparing. No duplicate job was started.');

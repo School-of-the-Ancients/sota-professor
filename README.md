@@ -178,3 +178,7 @@ and reusable custom historical teachers with a separate plausibility check.
 See the restoration section in `docs/OPENAI_REBUILD.md`. Media execution remains
 deferred; pending requests are not created images or scenes. Existing saved
 lessons remain compatible without a database migration.
+Local Operator image/background requests are now connected in the isolated Matrix
+candidate; see [connection and evidence](docs/OPERATOR_CONNECTION.md). The complete
+School interface and standalone teaching path remain intact. Current Leonardo
+data on 3108 was not migrated or overwritten.

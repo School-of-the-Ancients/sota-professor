@@ -4,6 +4,7 @@ import { schoolApi, type ProviderStatus, type SessionSummary } from './api';
 import type { SchoolSession, Teacher, Preferences } from './contracts';
 import { HISTORICAL_TEACHERS } from './personas.mjs';
 import { QuestPreferences, TeacherLibrary, QuestDetail, LearningReview } from './RestorationPanels';
+import { useOperator } from './useOperator';
 
 const button = 'rounded-lg bg-amber-200 px-5 py-3 text-sm font-bold text-stone-950 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-40';
 const secondary = 'rounded-lg border border-stone-600 px-4 py-2 text-sm text-stone-200 transition hover:border-amber-200 disabled:opacity-40';
@@ -35,6 +36,12 @@ const SchoolApp: React.FC = () => {
   const busyRef = useRef(busy);
   currentSession.current = session;
   busyRef.current = busy;
+  const operator = useOperator(session, async fields => {
+    const saved = currentSession.current; if (!saved) return;
+    const next = await schoolApi.action(saved, 'operator-result', fields);
+    setSession(previous => previous?.id === next.id && next.revision >= previous.revision
+      && (next.presentationRevision || 0) >= (previous.presentationRevision || 0) ? next : previous);
+  });
   const preparingExhibit = session?.presentations?.some(request => request.preparation?.status === 'preparing') || false;
 
   useEffect(() => {
@@ -168,6 +175,7 @@ const SchoolApp: React.FC = () => {
           {session && <button className={`${secondary} mt-3`} disabled={busy} onClick={() => void run(() => schoolApi.open(session.id))}>Reopen saved session</button>}
         </div>}
         {!session ? <div className="space-y-8">
+          {operator.connected && <p role="status" className="text-sm text-teal-200">{operator.notice}</p>}
           <section className="border-b border-stone-700 pb-8 pt-4">
             <p className="mb-4 text-xs uppercase tracking-[0.25em] text-amber-200">Curiosity becomes a course</p>
             <h1 className="max-w-2xl font-serif text-4xl leading-tight text-stone-100 md:text-5xl">What would you like<br />to understand?</h1>
@@ -213,6 +221,10 @@ const SchoolApp: React.FC = () => {
               <h3 className={`mb-2 text-xs font-bold uppercase tracking-widest ${message.role === 'user' ? 'text-stone-400' : 'text-amber-200'}`}>{message.role === 'user' ? 'You' : session.mentor.name}</h3>
               <p className="whitespace-pre-wrap text-sm leading-7 text-stone-200">{message.text}</p>
             </article>)}
+            {(session.presentations || []).filter(request => request.operator?.requestVersion === (request.version || 1)).map(request => <article key={`operator-${request.id}`} aria-label="Operator conversation update" className="rounded-xl border border-teal-800 bg-teal-950/20 p-5">
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-teal-200">Operator · {request.title}</h3>
+              <p className="text-sm leading-7">{request.operator!.summary}</p>
+            </article>)}
             <div ref={end} />
           </section>
           {latest && <section aria-label="Assessment result" className={`rounded-xl border p-5 ${latest.passed ? 'border-emerald-700 bg-emerald-950/20' : 'border-amber-700 bg-amber-950/20'}`}>
@@ -249,10 +261,10 @@ const SchoolApp: React.FC = () => {
             <p className="text-xs text-stone-500">Saved after each successful turn. Your full conversation is restored for your mentor when you return. No microphone required.</p>
           </section>}
           {exhibitRefreshError && preparingExhibit && <p role="status" className="text-sm text-amber-100">{exhibitRefreshError}</p>}
-          <LearningReview session={session} disabled={busy || !provider?.configured} onAction={(action, fields = {}) => run(() => schoolApi.action(session, action, fields))} />
+          <LearningReview session={session} disabled={busy || !provider?.configured} operator={operator} onAction={(action, fields = {}) => run(() => schoolApi.action(session, action, fields))} />
           {busy && <p role="status" className="text-sm text-amber-100">Working on this request. Your saved session remains available.</p>}
         </div>}
-        <footer className="mt-10 border-t border-stone-800 pt-5 text-xs leading-relaxed text-stone-500">Historically inspired teaching, with room for questions and correction. AI can make mistakes; verify consequential claims. Teaching uses native Codex with your ChatGPT sign-in on this computer and sends your goal and saved lesson context to OpenAI. Your plan, model and workspace limits apply. Keep the local School server running; this is a personal local app. No API-key fallback, ChatGPT history import, images or live voice are enabled.</footer>
+        <footer className="mt-10 border-t border-stone-800 pt-5 text-xs leading-relaxed text-stone-500">Historically inspired teaching, with room for questions and correction. AI can make mistakes; verify consequential claims. Teaching uses native Codex with your ChatGPT sign-in on this computer and sends your goal and saved lesson context to OpenAI. Your plan, model and workspace limits apply. Keep the local School server running; this is a personal local app. No API-key fallback or ChatGPT history import. Teaching tools and live voice remain disabled. Explicit Matrix image/background requests use its advertised native Codex capability; optional spatial creation stays in Matrix controls.</footer>
       </main>
     </div>
   </div>;

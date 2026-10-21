@@ -71,6 +71,12 @@ const context = session => ({
   goal: session.goal, title: session.title, description: session.description || '', durationEstimate: session.durationEstimate || '',
   preferences: session.preferences || defaultPreferences, mentor: restoreMentor(session.mentor), objectives: session.objectives,
   messages: session.messages, missedObjectiveIds: session.attempts.at(-1)?.missedObjectiveIds ?? [],
+  operatorResults: (session.presentations || []).filter(request => request.operator?.requestVersion === (request.version || 1))
+    .slice(-8).map(request => ({ requestId: request.id, title: request.title, objectiveId: request.objectiveId,
+      status: request.operator.status, summary: request.operator.summary, observedAt: request.operator.observedAt,
+      conceptId: request.operator.conceptId, conceptVersion: request.operator.conceptVersion,
+      runtimeId: request.operator.build?.runtimeId, objectIds: request.operator.build?.objectIds?.slice(0,8),
+      environment: request.operator.environment, interactionVerified: false })),
   assessmentFeedback: session.attempts.at(-1)?.feedback ?? [],
   completionGuidance: 'Teach objectives and offer a check when appropriate. Only server scoring can mark this short check complete. Conversation review is independent and cannot establish lasting mastery. Never announce completion before a submitted check.',
 });

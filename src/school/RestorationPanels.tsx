@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Preferences, SchoolSession, Teacher } from './contracts';
 import { ExhibitPanel, type ExhibitAction } from './ExhibitPanel';
+import type { OperatorConnection } from './useOperator';
 const field = 'w-full rounded-lg border border-stone-600 bg-stone-950 p-3 text-sm text-stone-100';
 const button = 'rounded-lg border border-stone-600 px-4 py-2 text-sm text-stone-200 hover:border-amber-200 disabled:opacity-40';
 export function QuestPreferences({ value, onChange, disabled }: { value: Preferences; onChange: (value: Preferences) => void; disabled: boolean }) {
@@ -25,12 +26,12 @@ export function QuestDetail({ session }: { session: SchoolSession }) {
     {session.mentorReview && <details><summary className="cursor-pointer text-stone-300">Independent mentor-fit review and alternatives</summary><p className="mt-2">{session.mentorReview.reason}</p>{session.mentorReview.caveats.map((item, index) => <p key={index} className="mt-1">{item}</p>)}<ul className="mt-2 space-y-2">{session.mentorReview.alternatives.map(item => <li key={item.mentorId}><strong>{item.name}</strong>: {item.reason}</li>)}</ul></details>}
   </div>;
 }
-export function LearningReview({ session, disabled, onAction }: { session: SchoolSession; disabled: boolean; onAction: ExhibitAction }) {
+export function LearningReview({ session, disabled, onAction, operator }: { session: SchoolSession; disabled: boolean; onAction: ExhibitAction; operator?: OperatorConnection }) {
   const review = session.assessments?.at(-1);
   return <>
     <section aria-label="Conversation evidence review" className="space-y-3 rounded-xl border border-stone-700 p-5"><h2 className="font-serif text-xl text-amber-100">What your conversation shows</h2><p className="text-sm text-stone-400">A separate review of your own contributions, with quotes and gaps. It does not change your quiz score or establish lasting mastery.</p><button type="button" className={button} disabled={disabled} onClick={() => onAction('assess')}>Review my conversation evidence</button>
       {review && <div className="space-y-3 text-sm"><p>{review.summary}</p><p className="text-xs text-stone-400">Result: {review.overall.replaceAll('_', ' ')} · through saved message {review.throughMessageIndex + 1}. {session.messages.length - 1 > review.throughMessageIndex ? 'Newer conversation is not included.' : ''}</p>{review.objectives.map(item => <article key={item.objectiveId} className="rounded-lg bg-stone-800/50 p-3"><h3>{session.objectives.find(objective => objective.id === item.objectiveId)?.label} — {item.status.replaceAll('_', ' ')}</h3>{item.evidence.map((evidence, index) => <blockquote key={index} className="mt-2 border-l border-amber-200/40 pl-3"><p>“{evidence.quote}”</p><p className="text-xs text-stone-400">Your message {evidence.messageIndex + 1}: {evidence.explanation}</p></blockquote>)}{item.gaps.map((gap, index) => <p key={index} className="mt-2 text-stone-400">Gap: {gap}</p>)}{item.nextSteps.map((step, index) => <p key={index} className="mt-1 text-stone-300">Next: {step}</p>)}</article>)}{review.limitations.map((item, index) => <p key={index} className="text-xs text-stone-500">{item}</p>)}</div>}
     </section>
-    <ExhibitPanel session={session} disabled={disabled} onAction={onAction} />
+    <ExhibitPanel session={session} disabled={disabled} onAction={onAction} operator={operator} />
   </>;
 }
