@@ -15,7 +15,7 @@ limits. Legacy Gemini/Supabase files and original static media are retained as
 reference, not enabled providers. No .school-data, learner records, raw exports,
 screenshots, credentials, generated runtime logs or backups are included.
 
-Validated locally on Demerzel: 30 server tests, 16 frontend/legacy tests, strict
+Validated locally on Demerzel after the eligibility correction: 35 server tests, 16 frontend/legacy tests, strict
 School typecheck and build. Eight real subscription generations plus a Chrome
 synthetic learning loop are documented separately from mocked tests. Media,
 voice, deployment and live Matrix execution remain unavailable/deferred.
@@ -47,3 +47,10 @@ They serve the original restoration checkpoint; the later handoff preparation is
 in this source checkout, not silently swapped into the user's running archive.
 The final current-source build passed again. See the validation record for exact
 served/source distinctions and the browser-control limitation.
+
+The Tesla eligibility correction is documented in docs/TESLA_ELIGIBILITY_FIX.md.
+Real historical people do not need professional teaching employment. The same
+identity/persona policy is applied to both existing comparison apps, while their
+archives and unrelated source differences remain preserved. Main runtime commit:
+db3ed482bbe45abe083c64046acf5c5b7f9627f7. Two additional live native generations
+accepted and persisted Tesla in a separate synthetic archive only.
