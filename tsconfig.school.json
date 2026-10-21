@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": ["node", "vite/client", "vitest/globals", "@testing-library/jest-dom"], "strict": true },
+  "include": ["src/school/**/*.ts", "src/school/**/*.tsx", "types.ts", "constants.ts"]
+}
