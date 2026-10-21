@@ -100,6 +100,7 @@ it('selects the restored roster, preserves preferences and reuses a custom revie
   fireEvent.change(screen.getByLabelText('Teaching style'), { target: { value: 'explanation' } });
   fireEvent.change(screen.getByLabelText('Time preference'), { target: { value: '20 minutes' } });
   fireEvent.click(screen.getByText('Create a reusable historical teacher'));
+  expect(screen.getByText(/Formal teaching employment is not required/)).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Historical figure'), { target: { value: custom.name } });
   fireEvent.click(screen.getByRole('button', { name: 'Review identity and save teacher' }));
   await waitFor(() => expect(screen.getByLabelText(/A mentor you have in mind/)).toHaveValue(custom.name));

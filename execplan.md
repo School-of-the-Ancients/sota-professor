@@ -60,3 +60,16 @@ identity/persona, rich planning plus fit review, teaching, inert artifact status
 independent grounded uncertainty, objective-covered 4/4 check, reload and actual
 22,083-byte JSON export. Quiz pass did not upgrade conversation uncertainty.
 See docs/VALIDATION_PROMPT_RESTORATION_2026-10-21.md. Media execution stays deferred.
+
+### Historical person eligibility correction
+
+Correct the occupational-teacher ambiguity in the identity prompt. Eligibility
+means an identifiable real historical person, without a formal teaching job
+requirement; quest expertise remains a separate matcher decision. Keep ambiguity
+and fictional-identity gates. Add five server regressions plus a UI assertion,
+run current suites/typecheck/build and a two-generation native Tesla creation
+in a synthetic archive. Reconcile only the scoped fix into existing comparison
+runtimes, preserving source differences and archive hashes. No live media or
+Matrix work. See docs/TESLA_ELIGIBILITY_FIX.md. The intended future scene-prep
+trigger (figure plus objective, asynchronous alongside introduction) is recorded
+in docs/OPERATOR_HANDOFF.md only; no jobs are enabled.

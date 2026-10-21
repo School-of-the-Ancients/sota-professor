@@ -44,3 +44,15 @@ Instructional AR/VR playability, interaction exercises and simulations remain
 deferred by the owner. This preparation must not be described as a plugged-in
 Operator, available image capability, tested headset experience or live Blender
 integration.
+
+## Intended preparation trigger (future adapter only)
+
+Once the historical figure has been selected and the lesson objective is known,
+prepare an initial teaching setting or exhibit using BOTH inputs, in parallel
+with the introduction. Mentor choice alone is not enough to choose a useful
+scene. Future concept-image and Blender work must be asynchronous, with honest
+pending/progress/failure and ready-to-load states. The selected concept/version
+still enters Matrix's existing pipeline; becoming ready must not automatically
+replace an active AR/VR scene. Loading remains an explicit runtime decision.
+While no adapter is connected, this is a documented intended trigger only: no
+image, Blender or scene job starts, and no paid fallback is enabled.

@@ -75,6 +75,18 @@ test('missing login, API-key login and incompatible native capabilities fail clo
   }
 });
 
+test('native Codex receives historical-person eligibility without an occupational teacher requirement', async t => {
+  const identity = { status: 'plausible', name: 'Nikola Tesla', era: '1856–1943', reason: 'Identifiable inventor; teaching employment is not required.', caveats: ['No independent historical verification.'] };
+  const { provider, calls } = harness(t, { value: identity });
+  assert.deepEqual(await provider.generate('identity', { requestedName: 'Nikola Tesla' }), identity);
+  const invocation = calls.find(call => call.args[0] === 'exec' && !call.args.includes('--help'));
+  assert.match(invocation.options.input, /real historical person/);
+  assert.match(invocation.options.input, /Formal teaching employment.*NOT required/);
+  assert.match(invocation.options.input, /Do not evaluate topic fit in this step/);
+  assert(invocation.args.includes('forced_login_method="chatgpt"'));
+  assert.equal(invocation.args[invocation.args.indexOf('--sandbox') + 1], 'read-only');
+});
+
 test('rejects malformed JSON, missing final output, mismatched output, incomplete events, failed turns and all tool attempts', async t => {
   const cases = [
     { value: { text: '', suggestions: [] } }, { noFinal: true }, { final: '{invalid' }, { final: JSON.stringify({ ...reply, text: 'mismatch' }) },

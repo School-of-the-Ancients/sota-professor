@@ -3,7 +3,7 @@ import { HISTORICAL_TEACHERS, findTeacher } from '../src/school/personas.mjs';
 import { requireValue, text, exact, strings } from './teaching.mjs';
 
 export async function createTeacher(provider, input) {
-  requireValue(exact(input, ['name']) && text(input.name, 160), 400, 'Name a historical teacher, up to 160 characters.');
+  requireValue(exact(input, ['name']) && text(input.name, 160), 400, 'Name a real historical figure, up to 160 characters. Teaching employment is not required.');
   const known = findTeacher(input.name);
   if (known) return structuredClone(known);
   const identity = await provider.generate('identity', { requestedName: input.name.trim() });
