@@ -89,11 +89,31 @@ to sibling `sota-restoration-source-backup-20261021`, preserving all files.
 After correcting this test-discovery artifact, the final worktree passed all
 25 server tests, 16 frontend/legacy tests, strict School typecheck and build.
 
-## Local checkpoint and remote hold
+## Private source checkpoint
 
-This is a WIP local beta checkpoint with media and deployment deferred. The
-owner requested a GitHub checkpoint, then a new private repository, then paused
-repository creation/push while reconsidering its name. No repository was created
-and nothing was pushed. The original `sota-beta` origin and history are preserved.
-Only source, tests and these implementation records belong in the local commit;
-private archives, raw transcripts, screenshots, exports and backups are excluded.
+The original local implementation is committed as `6eeb566` on
+`feat/openai-text-school`. A separate clean-history source snapshot was pushed to
+the private `School-of-the-Ancients/sota-professor` repository on
+`checkpoint/subscription-beta` at `5adb8d0`. The original `sota-beta` origin and
+history remain preserved; no push was made to that repository. Current source
+was scanned before publication. Private archives, raw transcripts, screenshots,
+exports, runtime logs and backups are excluded. No hosting was configured.
+
+Minimal Operator handoff preparation is documented in `OPERATOR_HANDOFF.md`.
+Its five additional pure contract tests pass: intent/objective/interactivity
+separation, static asset versus loaded object versus verified interaction,
+evidence categories, exact selected-concept binding and malformed receipts.
+Current totals are 30 server tests and 16 frontend/legacy tests, with strict
+School typecheck and build passing. Receipt fixtures are synthetic and are not
+evidence that Matrix or headset interaction ran.
+
+One additional real native-subscription turn verified the extended presentation
+schema: a single pending artifact request retained the exact objective, separate
+learning intent, and required move/rotate capabilities. No media, Matrix build,
+loader or interaction ran. Together with the earlier loop, nine bounded live
+structured generations are recorded. Final browser reattachment later became
+unavailable ('Debugger unattached'); no reload or user input change was attempted
+after that. The already-restored 3107 comparison app remains running with its
+existing archives. The prepared follow-up lives in the private sota-professor
+source checkout and is validated by the checks above; it has not been forced
+onto the user's current comparison tab.

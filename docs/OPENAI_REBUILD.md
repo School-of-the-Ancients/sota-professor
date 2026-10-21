@@ -4,7 +4,9 @@ Implementation date: October 21, 2026.
 Target repository: School-of-the-Ancients/sota-beta.
 Base: 5bf4ba01c794b398b3121081c06dd3b6bf6684f4.
 Worktree: C:\Users\theto\Documents\Codex\2026-10-20\task\sota-beta-openai.
-Branch: feat/openai-text-school. Changes remain local and uncommitted.
+Original implementation branch: feat/openai-text-school, checkpoint 6eeb566.
+Clean private source repository: School-of-the-Ancients/sota-professor,
+checkpoint/subscription-beta. See CHECKPOINT.md for provenance and limits.
 
 ## Selected scope and current provider
 

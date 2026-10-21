@@ -66,9 +66,37 @@ export interface PresentationRequest {
   status: 'pending' | 'unavailable';
   reason: string;
   createdAt: string;
+  learningIntent?: string;
+  interaction?: InteractionRequirement;
+  receipt?: PresentationReceipt;
 }
-export type PresentationOutcome =
-  | { requestId: string; status: 'pending' }
-  | { requestId: string; status: 'failed'; reason: string }
-  | { requestId: string; status: 'unavailable'; reason: string }
-  | { requestId: string; status: 'confirmed'; runtimeId: string; objectId: string };
+export type InteractionCapability = 'move' | 'rotate' | 'select' | 'measure' | 'simulate';
+export interface InteractionRequirement {
+  requirement: 'none' | 'required' | 'unspecified';
+  description: string;
+  capabilities: InteractionCapability[];
+}
+export interface PresentationHandoff {
+  version: 1; requestId: string; sessionId: string; kind: PresentationRequest['kind']; title: string;
+  learningIntent: string; learningObjective: Objective; requestedInteraction: InteractionRequirement; visualPrompt: string;
+}
+export interface SelectedConcept { id: string; version: number }
+export interface AssetReceipt { id: string; format: 'image' | 'glb'; validation: 'generated' | 'validated_glb' }
+export interface LoadedObjectReceipt { runtimeId: string; objectId: string }
+export type PresentationReceipt = { requestId: string; adapterId: string } & (
+  | { status: 'pending' | 'failed' | 'unavailable'; reason: string }
+  | { status: 'mockup_generated' | 'asset_generated'; concept: SelectedConcept; asset: AssetReceipt }
+  | { status: 'object_loaded'; concept: SelectedConcept; asset: AssetReceipt; object: LoadedObjectReceipt }
+  | { status: 'interaction_verified'; concept: SelectedConcept; asset: AssetReceipt; object: LoadedObjectReceipt;
+      interaction: { capabilities: InteractionCapability[]; evidence: { kind: 'automated' | 'desktop' | 'headset_wearer'; reference: string } } }
+);
+export type PresentationOutcome = PresentationReceipt;
+// Future trusted server adapter only. No implementation is configured and none
+// of these operations is exposed as a teacher tool or browser authoring endpoint.
+export interface PresentationAdapter {
+  readonly id: string;
+  availability(): Promise<{ available: boolean; reason: string }>;
+  requestMockup(request: PresentationHandoff): Promise<PresentationReceipt>;
+  createFromSelectedConcept(request: PresentationHandoff, selected: SelectedConcept): Promise<PresentationReceipt>;
+  getReceipt(requestId: string): Promise<PresentationReceipt>;
+}

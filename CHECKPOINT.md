@@ -15,7 +15,7 @@ limits. Legacy Gemini/Supabase files and original static media are retained as
 reference, not enabled providers. No .school-data, learner records, raw exports,
 screenshots, credentials, generated runtime logs or backups are included.
 
-Validated locally on Demerzel: 25 server tests, 16 frontend/legacy tests, strict
+Validated locally on Demerzel: 30 server tests, 16 frontend/legacy tests, strict
 School typecheck and build. Eight real subscription generations plus a Chrome
 synthetic learning loop are documented separately from mocked tests. Media,
 voice, deployment and live Matrix execution remain unavailable/deferred.
@@ -26,3 +26,17 @@ workflow, billing, collaborators or access grants were configured. Matrix owns
 any future concept image/version selection, Blender build and existing loader;
 School owns teaching intent, objectives and learner records. Instructional AR/VR
 interactivity and simulations are explicitly deferred.
+
+The prepared handoff contract separates learning intent, objective, requested
+interaction and visual prompt. Future mockup/asset/load/interaction receipts
+retain concept/version and runtime/object identity with evidence categories.
+See docs/OPERATOR_HANDOFF.md. Shape checks are not proof of runtime execution;
+the current app still reports presentation execution unavailable.
+
+Final follow-up validation: 30 server tests and 16 frontend/legacy tests, strict
+School typecheck and production build pass. One additional native subscription
+turn preserved move/rotate requirements separately from a mockup request, with
+pending status and no execution. The original 3107 comparison server and user
+archives remain in their original worktree; this checkout contains no learner
+archive. Browser reattachment was unavailable at the final refresh, so no forced
+reload or data migration was attempted.

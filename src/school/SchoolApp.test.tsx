@@ -119,6 +119,8 @@ it('keeps conversation evidence separate from quiz results and exposes honest pr
   vi.mocked(schoolApi.action).mockResolvedValue({ ...restored, revision: 2, presentations: restored.presentations!.map(item => ({ ...item, status: 'unavailable', reason: 'Unavailable: execution is not connected.' })) });
   render(<SchoolApp />);
   await screen.findByText('No independent explanation yet.');
+  expect(screen.getByText(/Interaction: unspecified/)).toBeInTheDocument();
+  expect(screen.getByText(/A static image or GLB does not establish playability/)).toBeInTheDocument();
   expect(screen.queryByRole('region', { name: 'Assessment result' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Check presentation availability' }));
   await screen.findByText('Unavailable: execution is not connected.');
