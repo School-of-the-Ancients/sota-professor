@@ -54,6 +54,8 @@ sync. Clearing the cookie loses browser access. Use **Export learning record**
 for records you want to keep. Existing beta/Supabase records are untouched;
 automatic migration is not implemented.
 
+[EACL 2026 Instructional Agents curriculum-creator research](docs/RESEARCH_INSTRUCTIONAL_AGENTS_EACL26.md) is a separate evaluation proposal; no new course generator or API billing is enabled by this checkpoint.
+
 [Rebuild design, review, limits and validation](docs/OPENAI_REBUILD.md) is the
 current implementation record. The Gemini/Supabase code below remains as legacy
 reference and regression coverage; it is not mounted by the new entry. Voice,
