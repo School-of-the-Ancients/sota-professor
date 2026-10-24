@@ -6,6 +6,7 @@ import { assessConversation } from './assessment.mjs';
 import { initialExhibit, editPresentation } from './exhibit-preparation.mjs';
 import { journal, appendEvent, conversationContext } from './conversation.mjs';
 import { captureOperatorCalls } from './operator-tasks.mjs';
+import { interactionSettings, interactionProblems } from './teaching-interaction.mjs';
 
 export class SchoolError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -74,6 +75,7 @@ export function publicSession(session) {
 }
 
 const context = session => ({
+  interaction: interactionSettings(session.messages),
   goal: session.goal, title: session.title, description: session.description || '', durationEstimate: session.durationEstimate || '',
   preferences: session.preferences || defaultPreferences, mentor: restoreMentor(session.mentor), objectives: session.objectives,
   messages: session.messages, missedObjectiveIds: session.attempts.at(-1)?.missedObjectiveIds ?? [],
@@ -90,6 +92,21 @@ const context = session => ({
   assessmentFeedback: session.attempts.at(-1)?.feedback ?? [],
   completionGuidance: 'Teach objectives and offer a check when appropriate. Only server scoring can mark this short check complete. Conversation review is independent and cannot establish lasting mastery. Never announce completion before a submitted check.',
 });
+
+async function teachingTurn(provider, session, task) {
+  const input = { ...context(session), task };
+  const original = validateTurn(await provider.generate('teach', input));
+  const problems = interactionProblems(original.text, input.interaction);
+  if (!problems.length) return original;
+  const revised = validateTurn(await provider.generate('teach', {
+    ...input,
+    task: 'Rewrite the draft response for this same turn using the conversational policy. Preserve its grounded meaning and task intent. Do not add new facts, claim new execution, or answer your own question. Only the revised text and suggestions will be used; the original tool/presentation requests are retained exactly once.',
+    responseRevision: { text: original.text, problems, toolCalls: original.toolCalls || [], presentationRequests: original.presentationRequests || [] }
+  }));
+  requireValue(!interactionProblems(revised.text, input.interaction).length, 502,
+    'The professor could not prepare a short, single-question reply. No new professor reply was saved; try again.');
+  return { ...original, text: revised.text, suggestions: revised.suggestions };
+}
 export const defaultPreferences = { difficulty: 'beginner', style: 'balanced', timeBudget: '' };
 function preferences(value = defaultPreferences) {
   requireValue(exact(value, ['difficulty', 'style', 'timeBudget']) && ['beginner', 'intermediate', 'advanced'].includes(value.difficulty)
@@ -125,7 +142,7 @@ export async function createSession(provider, input, customTeachers = [], onSele
   };
   initialExhibit(session);
   onSelected(session);
-  const opening = validateTurn(await provider.generate('teach', { ...context(session), task: 'Introduce the quest with a useful explanation and concrete example suited to learner preferences. A brief diagnostic question is optional. No mastery has yet been demonstrated. One focused exhibit request is being prepared separately; return an empty presentationRequests array for this introduction.' }));
+  const opening = await teachingTurn(provider, session, 'Introduce yourself briefly and start one small step of the quest. Invite one observation or ask one focused diagnostic question, then wait. An exhibit request is being prepared separately: do not claim it is ready, and return empty presentationRequests and toolCalls arrays. No mastery has yet been demonstrated.');
   applyTurn(session, { ...opening, presentationRequests: [], toolCalls: [] });
   return session;
 }
@@ -142,9 +159,9 @@ export async function advanceSession(provider, existing, action, input, conversa
     if (!conversationEventId) journal(session);
     session.messages.push({ role: 'user', text: input.text.trim() });
     if (!conversationEventId) appendEvent(session, { id: turnId, speaker: 'learner', recipient: 'professor', inputKind: 'text', text: input.text.trim(), worldId: '' }, true);
-    const turn = validateTurn(await provider.generate('teach', { ...context(session), task: session.status === 'needs_review'
-      ? 'Respond to the learner and reteach the missed objectives using the assessment feedback. Give a different example and a transfer question. Do not award completion.'
-      : 'Respond conversationally with explanation and concrete examples suited to preferences. Questions are optional; do not award completion.' }));
+    const turn = await teachingTurn(provider, session, session.status === 'needs_review'
+      ? 'Respond to the learner’s latest answer and focus on one missed concept using the feedback. Give one short hint or a small example and at most one question, then wait. Use an existing relevant exhibit if supported. Do not award completion.'
+      : 'Respond to the learner’s latest answer or request, then offer one useful next step. Prefer observing or using an existing relevant exhibit over lecturing. Ask at most one focused question and wait; do not give its answer. Follow the requested level of detail and do not award completion.');
     applyTurn(session, turn, turnId);
     if (session.status === 'needs_review') session.reviewCompleted = true;
   } else if (action === 'assess') {

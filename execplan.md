@@ -145,3 +145,7 @@ Structured teaching output can return one bounded matrix_operator call per turn.
 ### Quest continuation
 
 The owner requested Quest AR, local voice/lip-sync and concurrent Matrix builds, plus Full access as the local Professor launcher's default. The USB port mapping keeps the loopback service and existing auth/origin checks. School adds five-minute, one-use learner continuation codes for an empty receiving browser; an existing archive cannot be silently displaced. Codex credentials stay on the PC. Pairing shares saved lessons and the conversation archive across the user's two devices. Record actual headset results separately from software/USB readiness and update the existing draft checkpoint PRs; no merge or release is authorized.
+
+### Short, exhibit-led conversation
+
+The owner selected School #7 and supplied Riko's spoken conversation prompt as a style reference. Apply natural short spoken turns to existing/new lessons without changing persona identity, old transcripts, quiz scoring or world authority. Default to one observation/action/question and wait, use actual exhibit/task evidence, and avoid lists or canned assistant language. Explicit detail requests allow longer explanations. Validate new replies and allow one rewrite for verbosity/multiple questions, retaining original validated tool intent exactly once. Do not introduce Riko's unsupported animation tags into speech; pose/catalog work remains future scope.
