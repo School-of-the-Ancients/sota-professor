@@ -35,6 +35,14 @@ test('reuses an exact saved avatar without a generation request or lesson revisi
  assert.equal(session.revision,7);assert.equal(submitted,false);assert.deepEqual(session.messages,[{text:'Keep teaching'}]);
 });
 
+test('fresh background matching uses the local upgraded teacher before the bundled cast',async t=>{
+ const f=await setup(t,{catalog:async()=>[
+  {catalogId:'bundled',automaticSelection:true,teacherMatches:['leonardo'],libraryOwned:true},
+  {catalogId:'upgraded',automaticSelection:true,teacherMatches:['leonardo'],libraryOwned:false}],
+  provider:{generate(){throw Error('No generation needed');}}});
+ await f.worker.idle();assert.equal((await f.read()).appearance.catalogId,'upgraded');
+});
+
 test('queues a missing appearance and attaches only its validated catalog result',async t=>{
  let available=false,submits=0;
  const f=await setup(t,{catalog:async()=>available?[{catalogId:'new-avatar',assetSha256:'hash',availability:'ready'}]:[],

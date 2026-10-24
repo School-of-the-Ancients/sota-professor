@@ -4,10 +4,26 @@ The active architecture and setup are in [README.md](README.md); current deliver
 partial and future issue status is in [CHECKPOINT.md](CHECKPOINT.md). This document
 retains dated implementation decisions. An old entry saying a feature was excluded,
 unmerged or unauthorized describes that phase, not the current implementation.
-Current user instructions take precedence. The October 24 review changes only
-documentation and issue status; it does not add a provider, alter archives or restart
-services. Full-duplex voice, reviewed curriculum preload and broad Quest acceptance
-remain open.
+Current user instructions take precedence. The October 24 consolidation includes
+Professor #14 and Matrix #229/#230, updates current roadmaps and retains prior
+release/acceptance evidence. P4/P5 core behavior is implemented; P3 native live
+voice and reviewed curriculum consumption remain separate work. No learner
+history or world reset accompanies source consolidation.
+
+### Point & Speak exhibit practice
+
+The owner's subsequent AR request adds a bounded part-identification practice
+beside the formal quiz. School owns the persisted activity, current round,
+exact part checks, feedback, attempt IDs and progress. Matrix provides the
+current annotated exhibit, explicit A/X selection and existing Professor voice.
+Prompts explain authored annotations before asking for the part; they do not
+assert validated mechanics. Wrong selections retry the same round; correct
+selections advance. Hints, repeat and stop are explicit voice commands. Formal
+quiz answers, scores and completion are preserved. Public responses omit the
+internal part-answer plan. Device readability/input/voice acceptance stays
+separate from synthetic HTTP and controller evidence.
+Explanation and question are separate saved speech events. Matrix permits
+labels during explanation and hides answer-revealing overlays for the question.
 
 
 ### Direct invention requests after historical preview failures
@@ -209,3 +225,27 @@ The owner selected additional professor bodies and closest-available matching. M
 ### Selected-surface snapshot vision
 
 The owner requested exact item-surface pointing beyond predefined parts and an image the Professor can describe. Matrix captures a user-selected virtual point and one marked virtual-view image, with trigger/grip bindings preserved. School validates the bounded point and JPEG against the current scene and delivers the image through native Codex input within the same restricted teaching turn. It stores the point reference and reply, never the image bytes. Temporary files are removed after inference; there is no camera passthrough, new tool access or API-key fallback. Explanations separate visible evidence, metadata and uncertain function. Automated checks, a real-model capture and native model inference are separate from pending Quest wearer acceptance. Preserve all existing archives and worlds.
+
+### Socratic exhibit practice
+
+The owner requested implementation and deployment of adaptive spoken learning.
+New practice starts with a source-grounded observation puzzle, then uses the
+existing native teaching provider to review explanations, predictions and
+transfer. Each model-reviewed milestone retains an exact learner quote and a
+reason; observation alone is not scored as understanding. Short single-question
+turns, hints, revisions and stage-scoped label masking keep interaction in AR.
+Existing recognition activity remains saved until the learner starts the new
+mode. Formal quiz scores, scene state, identities and archives are unchanged.
+Validation includes malformed-evidence rejection, stale scene/round handling,
+idempotency, voice journal reuse, transfer selections and native-provider review
+in a synthetic lesson. Physical wearer acceptance remains separate.
+
+### Continuous conversations
+
+The owner requested removal of conversation turn limits. Remove the 81-message
+teaching cap, 100-turn/attempt practice caps and 5000-event journal cap. Keep the
+complete saved transcript and all scores; send a bounded recent-history window
+to teaching rather than eventually failing on accumulated prompt size. Existing
+input validation, request rate protection and archive byte-size safety remain.
+Regression coverage continues long lessons, large journals and both practice
+modes past their former limits while checking history retention and prompt size.

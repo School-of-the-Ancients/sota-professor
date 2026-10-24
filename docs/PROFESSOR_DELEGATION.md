@@ -33,3 +33,38 @@ The server checks the response before saving or speaking it: ordinary replies ha
 Validation: 63 server tests, 26 UI tests, type checking and both builds pass. A five-turn native Codex check used an isolated synthetic Leonardo lesson: four ordinary replies were 44–61 words with at most one question; they adapted to the student's answer and correctly reported an unfinished model as pending. An explicit request for detail produced 199 words. No extra world task was requested. This is model/software evidence; the user's assessment of the new style in Quest remains to be collected.
 
 The parallel visual TODOs remain [Matrix #214](https://github.com/School-of-the-Ancients/matrix-loading-operator/issues/214), appropriate curated teacher avatars with dynamic generation deferred, and [Matrix #215](https://github.com/School-of-the-Ancients/matrix-loading-operator/issues/215), fixing the rigid rest pose and adding natural motion. Riko's expression/emote tags belong to that future adapter; they are not emitted as spoken text.
+
+
+## Selected next milestone: live voice adapter
+
+October 24 owner direction: Matrix/Loading Operator is School's spatial creation
+module, retaining free-form sandbox creation. Add VisionClaw-inspired fast voice
+in front of the existing slower native teaching/Operator backend. This section
+is a design contract, not a claim that live audio has been implemented.
+
+| Boundary | Contract |
+| --- | --- |
+| Session | A voice session binds one learner, School session/teacher, optional current Matrix world and a connection generation. Never restore it against a different lesson. |
+| Input | Partial transcripts update captions only. A provider-finalized/grouped utterance receives one stable event ID before teaching, scoring or world work; retries reuse that ID. |
+| Fast response | Greetings, acknowledgements and repetition of current verified content may remain in the voice layer. Lesson decisions, scoring and new world actions delegate to the backend. |
+| Backend result | Carry request/event ID, session revision, answer or next question, optional practice revision, and task handle/status/receipt. Drop stale results after teacher/world/session changes. |
+| Interruption | Stop audible output and discard its queued audio; do not silently cancel an already accepted world task. Record what was actually spoken separately from the complete backend answer. |
+| Tool status | Reuse current Operator queue and authorized endpoints. Distinguish accepted/running from observed completion; late results cannot speak over a new question without coordination. |
+| Recovery | One microphone owner and one active output stream. Disconnect releases audio resources; reconnect preserves learner records, reconciles pending work and never automatically replays uncertain actions. |
+| Fallback | Feature flag defaults off until configured. Text and existing push-to-talk remain available without a live-provider key. Never put durable provider secrets in the Quest page. |
+
+First acceptance: two spoken questions, one interrupted answer and one real
+background exhibit job during continued conversation; correct result narration,
+no duplicate actions, preserved practice/quiz state, and reconnect recovery.
+Record first-audible latency, interruption-to-silence, task status latency and
+provider usage on desktop, then Quest. Set measurable targets from the actual
+baseline; do not substitute response-finished timing for first-audible timing.
+
+[Current OpenAI migration guidance](https://developers.openai.com/api/docs/guides/live-migration)
+describes client delegation for keeping an existing agent behind GPT-Live.
+Evaluate that adapter alongside the legacy Gemini Live reference; do not wire
+both or assume old provider event names match current APIs. Provider selection,
+account availability and a spending limit precede a paid live test. Existing
+Codex sign-in remains the teaching backend, not a source of extracted API tokens.
+
+Owner: [Professor #3](https://github.com/School-of-the-Ancients/sota-professor/issues/3).

@@ -14,6 +14,15 @@ const avatars=[
  {catalogId:'victorian',displayName:'Victorian scholar',availability:'ready',automaticSelection:true,teacherMatches:['ada-lovelace']},
  {catalogId:'riko',displayName:'Riko',availability:'ready',automaticSelection:false,visualTags:['fantasy']}];
 const session={id:'lesson',revision:1,mentor:{name:'Leonardo da Vinci',id:'leonardo',era:'Renaissance'},messages:[{text:'Preserve me'}]};
+
+test('a ready local teacher upgrade wins over the bundled fallback for a fresh match',async()=>{
+ const catalog=[{...avatars[1],libraryOwned:true},{...avatars[1],catalogId:'local-upgrade',libraryOwned:false}];
+ const result=await chooseAppearance({generate(){throw Error('No generation needed');}},session,{revision:1,mode:'auto'},catalog);
+ assert.equal(result.appearance.catalogId,'local-upgrade');
+ assert.equal(session.appearance,undefined);
+ const manual=await chooseAppearance({},session,{revision:1,mode:'manual',catalogId:'renaissance'},catalog);
+ assert.equal(manual.appearance.catalogId,'renaissance');
+});
 test('curated historical matches and manual pins preserve the lesson and exclude fantasy by default',async()=>{
  const provider={generate:async()=>{throw Error('Curated matches need no model request');}};
  const leo=await chooseAppearance(provider,session,{revision:1,mode:'auto'},avatars);

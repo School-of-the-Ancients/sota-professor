@@ -9,6 +9,10 @@ import {surfaceInScene} from './surface-visual.mjs';
 import { captureOperatorCalls } from './operator-tasks.mjs';
 import { interactionSettings, interactionProblems } from './teaching-interaction.mjs';
 import { avatarCue } from './embodiment.mjs';
+import {publicPractice} from './point-practice.mjs';
+import {publicSocraticPractice} from './socratic-practice.mjs';
+import {recentContext} from './context-window.mjs';
+const practiceView=value=>value?.mode==='socratic'?publicSocraticPractice(value):publicPractice(value);
 
 export class SchoolError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -73,6 +77,7 @@ export function publicSession(session) {
   journal(copy);
   copy.mentor = restoreMentor(copy.mentor);
   if (copy.quiz) copy.quiz.questions = copy.quiz.questions.map(({ answer, explanation, ...question }) => question);
+  if(copy.practice)copy.practice=practiceView(copy.practice);
   return copy;
 }
 
@@ -80,7 +85,9 @@ const context = session => ({
   interaction: interactionSettings(session.messages),
   goal: session.goal, title: session.title, description: session.description || '', durationEstimate: session.durationEstimate || '',
   preferences: session.preferences || defaultPreferences, mentor: restoreMentor(session.mentor), objectives: session.objectives,
-  messages: session.messages, missedObjectiveIds: session.attempts.at(-1)?.missedObjectiveIds ?? [],
+  messages: recentContext(session.messages), missedObjectiveIds: session.attempts.at(-1)?.missedObjectiveIds ?? [],
+  historyWindow:{totalMessages:session.messages.length,fullTranscriptStored:true,
+    guidance:'This request includes recent conversation within an input budget. Earlier turns remain saved but may be omitted here. Do not pretend to remember omitted details; ask for clarification when needed.'},
   sharedConversation: conversationContext(session),
   appearance: session.appearance ? {status:session.appearance.status||'ready',reason:session.appearance.reason,catalogId:session.appearance.catalogId} : null,
   operatorTasks: (session.operatorTasks||[]).slice(-8).map(({id,title,status,execution})=>({id,title,status,
@@ -96,6 +103,8 @@ const context = session => ({
       runtimeId: request.operator.build?.runtimeId, objectIds: request.operator.build?.objectIds?.slice(0,8),
       environment: request.operator.environment, interactionVerified: false })),
   assessmentFeedback: session.attempts.at(-1)?.feedback ?? [],
+  exhibitPractice:practiceView(session.practice),
+  practiceGuidance: 'Only exhibitPractice with status active means the tracked interactive activity has started. Never claim you started a quiz, changed mode, or awarded a practice milestone from ordinary conversation. If a learner asks to start interactive practice but exhibitPractice is not active, direct them to the Explore & Reason control in the lesson menu; do not imitate the activity with an open-ended chain of questions.',
   completionGuidance: 'Teach objectives and offer a check when appropriate. Only server scoring can mark this short check complete. Conversation review is independent and cannot establish lasting mastery. Never announce completion before a submitted check.',
 });
 
@@ -168,8 +177,7 @@ export async function advanceSession(provider, existing, action, input, conversa
   session.mentor = restoreMentor(session.mentor);
   if (action === 'message') {
     requireValue(exact(input, ['revision', 'text']) && text(input.text, 4000), 400, 'Enter a message up to 4,000 characters.');
-    requireValue(session.status !== 'quiz', 409, 'Submit the current quiz before continuing the conversation.');
-    requireValue(session.messages.length < 81, 422, 'This quest has reached its conversation limit. Start a new quest; the full session remains saved.');
+    requireValue(session.status !== 'quiz'||session.practice, 409, 'Submit the current quiz before continuing the conversation.');
     const turnId = conversationEventId || randomUUID();
     if (!conversationEventId) journal(session);
     session.messages.push({ role: 'user', text: input.text.trim() });
