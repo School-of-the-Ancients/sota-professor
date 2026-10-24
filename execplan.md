@@ -1,5 +1,16 @@
 this is a living document
 
+### Direct invention requests after historical preview failures
+
+Current teaching context explicitly distinguishes direct Blender creation from
+the selected-concept-image build path. A request to create and load an invention
+delegates that outcome, reusing the library first, without inventing a preview
+prerequisite from old messages. Retain failed task evidence and expose whether a
+task actually started; do not duplicate a running task. Validation: 83 server
+tests, School typecheck, Matrix bundle build, and isolated native teaching replay
+with a historical preview error. Live Operator loading and Quest display remain
+separate evidence.
+
 ### Part-aware embodied teaching
 
 The Matrix adapter supplies bounded part IDs, labels and author descriptions for
