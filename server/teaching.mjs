@@ -5,6 +5,7 @@ import { presentationRecords, checkPresentation } from './presentation.mjs';
 import { assessConversation } from './assessment.mjs';
 import { initialExhibit, editPresentation } from './exhibit-preparation.mjs';
 import { journal, appendEvent, conversationContext } from './conversation.mjs';
+import {surfaceInScene} from './surface-visual.mjs';
 import { captureOperatorCalls } from './operator-tasks.mjs';
 import { interactionSettings, interactionProblems } from './teaching-interaction.mjs';
 import { avatarCue } from './embodiment.mjs';
@@ -95,9 +96,13 @@ const context = session => ({
   completionGuidance: 'Teach objectives and offer a check when appropriate. Only server scoring can mark this short check complete. Conversation review is independent and cannot establish lasting mastery. Never announce completion before a submitted check.',
 });
 
-async function teachingTurn(provider, session, task, scene = null) {
-  const input = { ...context(session), task, embodiedScene: scene };
-  const original = validateTurn(await provider.generate('teach', input));
+async function teachingTurn(provider, session, task, scene = null, visual = null, surface = null) {
+  const selected=surfaceInScene(surface,scene);
+  if(selected)scene={...scene,selectedSurface:selected};
+  const input = { ...context(session), task, embodiedScene: scene,
+    ...(visual?{visualObservation:{source:'selected virtual object view',selectionId:visual.selectionId,
+      marker:'yellow crosshair',includesPhysicalCamera:false,width:visual.width,height:visual.height}}:{}) };
+  const original = validateTurn(await provider.generate('teach', input,visual?{image:visual}:{}));
   const problems = interactionProblems(original.text, input.interaction);
   const cue = avatarCue(original.avatarAction, scene);
   if (!problems.length) return { ...original, avatarCue: cue };
@@ -105,7 +110,7 @@ async function teachingTurn(provider, session, task, scene = null) {
     ...input,
     task: 'Rewrite the draft response for this same turn using the conversational policy. Preserve its grounded meaning and task intent. Do not add new facts, claim new execution, or answer your own question. Only the revised text and suggestions will be used; the original tool/presentation requests are retained exactly once.',
     responseRevision: { text: original.text, problems, toolCalls: original.toolCalls || [], presentationRequests: original.presentationRequests || [] }
-  }));
+  },visual?{image:visual}:{}));
   requireValue(!interactionProblems(revised.text, input.interaction).length, 502,
     'The professor could not prepare a short, single-question reply. No new professor reply was saved; try again.');
   return { ...original, text: revised.text, suggestions: revised.suggestions, avatarCue: cue };
@@ -154,7 +159,7 @@ export async function createSession(provider, input, customTeachers = [], onSele
   return session;
 }
 
-export async function advanceSession(provider, existing, action, input, conversationEventId = null, scene = null) {
+export async function advanceSession(provider, existing, action, input, conversationEventId = null, scene = null, visual = null) {
   requireValue(input && Number.isInteger(input.revision) && input.revision === existing.revision, 409, 'This session changed. Reopen it before trying again.');
   const session = structuredClone(existing);
   session.mentor = restoreMentor(session.mentor);
@@ -168,7 +173,8 @@ export async function advanceSession(provider, existing, action, input, conversa
     if (!conversationEventId) appendEvent(session, { id: turnId, speaker: 'learner', recipient: 'professor', inputKind: 'text', text: input.text.trim(), worldId: '' }, true);
     const turn = await teachingTurn(provider, session, session.status === 'needs_review'
       ? 'Respond to the learner’s latest answer and focus on one missed concept using the feedback. Give one short hint or a small example and at most one question, then wait. Use an existing relevant exhibit if supported. Do not award completion.'
-      : 'Respond to the learner’s latest answer or request, then offer one useful next step. Prefer observing or using an existing relevant exhibit over lecturing. Ask at most one focused question and wait; do not give its answer. Follow the requested level of detail and do not award completion.', scene);
+      : 'Respond to the learner’s latest answer or request, then offer one useful next step. Prefer observing or using an existing relevant exhibit over lecturing. Ask at most one focused question and wait; do not give its answer. Follow the requested level of detail and do not award completion.', scene,visual,
+      journal(session).events.find(event=>event.id===turnId)?.surfaceReference);
     applyTurn(session, turn, turnId);
     if (session.status === 'needs_review') session.reviewCompleted = true;
   } else if (action === 'assess') {

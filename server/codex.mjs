@@ -150,6 +150,7 @@ export class CodexTeachingProvider {
       const version = await this.runner(this.executable, ['--version'], { cwd: directory, env: this.env });
       requireValue(version.code === 0 && version.stdout.trim() === `codex-cli ${SUPPORTED_VERSION}`, 503, `This teaching adapter is verified for Codex ${SUPPORTED_VERSION}. The installed version needs a compatibility review before teaching can run.`);
       const help = await this.runner(this.executable, ['exec', '--help'], { cwd: directory, env: this.env });
+      this.imageInputSupported=help.stdout.includes('--image');
       const features = await this.runner(this.executable, ['features', 'list'], { cwd: directory, env: this.env });
       const names = new Set(features.stdout.split(/\r?\n/).map(line => line.trim().split(/\s+/)[0]));
       requireValue(help.code === 0 && features.code === 0 && REQUIRED_FLAGS.every(flag => help.stdout.includes(flag))
@@ -168,13 +169,15 @@ export class CodexTeachingProvider {
     catch (error) { this.ready = false; this.message = error instanceof SchoolError ? error.message : 'Native Codex is unavailable on this computer. Your saved sessions remain available.'; }
     return this.status();
   }
-  async generate(kind, context) {
+  async generate(kind, context, {image=null} = {}) {
     requireValue(Object.hasOwn(schemas, kind), 400, 'Unknown teaching operation.');
     const prompt = teachingPrompt(kind, context);
     requireValue(Buffer.byteLength(prompt) <= 160000, 422, 'This session exceeds the teaching context limit. Its full history remains saved.');
     try {
       return await this.workspace(async directory => {
         await this.verify(directory);
+        requireValue(!image||kind==='teach'&&this.imageInputSupported&&Buffer.isBuffer(image.bytes)&&image.bytes.length<=512*1024,
+          503,'This teaching connection cannot accept the selected view.');
         const schemaPath = join(directory, 'response-schema.json');
         const finalPath = join(directory, 'response.json');
         writeFileSync(schemaPath, JSON.stringify(schemas[kind]), { encoding: 'utf8', mode: 0o600 });
@@ -185,6 +188,7 @@ export class CodexTeachingProvider {
           '--config', 'suppress_unstable_features_warning=true',
           '--enable', 'skip_host_skill_discovery'];
         for (const feature of DISABLED_FEATURES) args.push('--disable', feature);
+        if(image){const imagePath=join(directory,'selected-surface.jpg');writeFileSync(imagePath,image.bytes,{mode:0o600});args.push('--image',imagePath);}
         args.push('--model', this.model, '-');
         const events = eventReader();
         const result = await this.runner(this.executable, args, { cwd: directory, env: this.env, input: prompt, timeoutMs: this.timeoutMs, onLine: line => events.line(line) });
