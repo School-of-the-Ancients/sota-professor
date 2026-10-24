@@ -16,9 +16,13 @@ function PromptCard({ request, disabled, onAction, operator }: { request: Presen
     : request.promptEdited ? 'Edited prompt saved' : state === 'ready' ? 'Request prepared' : request.status;
   return <article className="space-y-3 rounded-lg bg-stone-800/50 p-4 text-sm">
     <h3 className="font-serif text-lg text-stone-100">{request.title} · {request.kind}</h3>
-    <p role="status" className="text-amber-100">{result ? `Operator: ${result.status.replaceAll('_', ' ')}` : `${label} · ${operator?.connected ? 'Matrix connected; not submitted' : 'Matrix not connected'}`}</p>
+    <p role="status" className="text-amber-100">{result ? result.build?.status === 'requested' ? 'Operator: building 3D exhibit' : result.build?.status === 'failed' ? 'Operator: 3D build needs attention' : result.build?.status === 'completed' ? 'Operator: 3D build recorded' : `Operator: ${result.status.replaceAll('_', ' ')}` : `${label} · ${operator?.connected ? 'Matrix connected; not submitted' : 'Matrix not connected'}`}</p>
     {result && <div aria-label="Operator result" className="space-y-2 rounded-lg border border-stone-600 p-3">
-      <p>{result.summary}</p><p className="text-xs text-stone-400">Concept {result.conceptId}, version {result.conceptVersion}. {result.selected ? 'Selected in Matrix.' : 'No selection confirmed.'}</p>
+      <p>{result.summary}</p>
+      {operator && request.kind === 'artifact' && result.image && <button type="button"
+        className={`${button} border-amber-300 bg-amber-200/10`} disabled={disabled || !operator.connected || !!operator.building || !!result.build}
+        onClick={() => operator.build(request)}>{result.build ? result.build.status === 'requested' ? 'Building in Blender…' : '3D build recorded' : operator.building === request.id ? 'Starting Blender…' : 'Create 3D in Blender'}</button>}
+      <p className="text-xs text-stone-400">Concept {result.conceptId}, version {result.conceptVersion}. {result.selected ? 'Selected in Matrix.' : 'No selection confirmed.'}</p>
       {result.observedAt && <p className="text-xs text-stone-500">Last verified {new Date(result.observedAt).toLocaleString()}. Refresh to check current runtime state.</p>}
       {result.image && <img src={`${window.location.port === '8765' ? '' : 'http://127.0.0.1:8765'}${result.image.previewUrl}`} alt={`Operator illustration: ${request.title}`} className="max-h-80 w-full object-contain" />}
       <p className="text-xs text-stone-400">Request {result.actionId}. Static media does not establish interaction or scientific simulation.</p>

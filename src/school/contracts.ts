@@ -32,6 +32,8 @@ export interface Attempt {
   feedback: { objectiveId: string; prompt: string; correct: boolean; explanation: string }[];
 }
 export interface SchoolSession {
+  operatorTasks?: {id:string;title:string;instruction:string;objectiveId:string;status:string;sourceReplyId:string;execution:null|{result:string;message:string;status:string}}[];
+  conversation?: { version: number; events: { id:string; speaker:string; recipient:string; text:string; inputKind:string; delivery:string; createdAt:string }[] };
   id: string;
   revision: number;
   createdAt: string;

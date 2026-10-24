@@ -8,6 +8,28 @@ import { SessionStore } from './store.mjs';
 import { createSchoolApi } from './http.mjs';
 import { mockProvider } from './fixtures.mjs';
 
+test('spoken journal is durable, idempotent and isolated, and speech failures retain the input',async t=>{
+  const directory=await mkdtemp(join(tmpdir(),'sota-voice-')),provider=mockProvider();
+  const api=createSchoolApi({store:new SessionStore(directory),provider});
+  const server=createServer((req,res)=>void api(req,res));await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  t.after(async()=>{await new Promise(resolve=>server.close(resolve));await api.preparations.idle();await rm(directory,{recursive:true,force:true});});
+  let cookie;const call=async(path,body,otherCookie)=>{const response=await fetch(`http://127.0.0.1:${server.address().port}/api/school/${path}`,{
+    method:body?'POST':'GET',headers:{...(cookie?{cookie:otherCookie||cookie}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+    cookie=response.headers.get('set-cookie')?.split(';')[0]||cookie;return {status:response.status,value:await response.json()};};
+  const {value:session}=await call('sessions',{goal:'Algorithms',mentor:'Ada Lovelace'}),base=`sessions/${session.id}`;
+  const event={id:'voice-turn-one',speaker:'learner',recipient:'professor',inputKind:'voice',text:'Please explain nine.',worldId:'test-world'};
+  assert.equal((await call(base+'/conversation',{event})).status,200);
+  const body={eventId:event.id,revision:session.revision};const reply=await call(base+'/spoken-message',body);
+  assert.equal(reply.status,200);assert.equal((await call(base+'/spoken-message',body)).value.messages.length,reply.value.messages.length);
+  assert.equal(reply.value.conversation.events.filter(item=>item.id===event.id).length,1);
+  await call(base+'/speech-delivery',{eventId:'reply:'+event.id,delivery:'interrupted'});
+  assert.equal((await call(base)).value.conversation.events.at(-1).delivery,'interrupted');
+  assert.equal((await call(base,undefined,'sota-local-learner='+'f'.repeat(64))).status,404);
+  const next={...event,id:'failed-voice',text:'Try this next.'};await call(base+'/conversation',{event:next});provider.fail=true;
+  assert.equal((await call(base+'/spoken-message',{eventId:next.id,revision:reply.value.revision})).status,500);
+  assert((await call(base)).value.conversation.events.some(item=>item.id===next.id));
+});
+
 test('local HTTP lifecycle: isolation, durable reload, hidden answers, stale writes and safe failure', async t => {
   const directory = await mkdtemp(join(tmpdir(), 'sota-test-'));
   const provider = mockProvider();

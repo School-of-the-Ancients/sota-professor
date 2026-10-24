@@ -103,3 +103,41 @@ first embodied-professor slice is docs/MATRIX_INTEGRATION_RECOMMENDATION.md.
 No remote push is authorized by this task; the earlier documentation push denial
 remains in effect. Local commits and deliberate archive-preserving runtime
 updates are allowed.
+
+
+### October 21 Operator retry/error correction
+
+The matching Matrix transport now accepts one valid image after a rejected
+attempt while rejecting multiple successful images. Keep the verified,
+bounded failure reason in the Operator summary shown to the learner and in
+teaching context. The 48 server tests, 22 frontend tests and School typecheck
+passed. The existing image was recovered into its original Matrix job and
+refreshed through the current lesson's normal status controls. Only that
+Operator result and presentation revision changed; no new generation, lesson
+conversation, answers, 3108 archive or Matrix scene changes were made.
+
+
+### October 21 one-click Professor image to Blender
+
+The owner selected immediate build after clicking a ready Professor image.
+Add Create 3D in Blender on artifact cards. Carry only the exact verified
+lesson/request/concept/checksum identity; Matrix composes the spatial build
+instruction and uses its existing selected-image Blender pipeline. Preserve
+teacher tool restrictions and saved image prompts. Report progress and verified
+loaded objects separately; repeated clicks/reopen return the existing job.
+Keep the original 3108 runtime and archive untouched. Full suites/typecheck/
+builds and bounded actual HTTP handoff tests precede the local UI update.
+
+### October 23 embodied professor first slice
+
+Add an appearance picker and explicit Place professor in Matrix action to the existing lesson screen. Use the existing authenticated parent-window channel; send only catalog/teacher/lesson identity. Matrix owns the immutable VRM asset and world object. Reopening a bound object restores the exact lesson and its current appearance. Repeated clicks are blocked, failures/timeouts are visible, and re-placement is idempotent in Matrix. No teaching provider, API credential, original archive, live voice or image/build authorization changes. The isolated browser fixture validated the actual Riko model; 26 frontend tests, School typecheck and build:matrix passed. Quest acceptance remains separate.
+
+### October 23 voice routing and shared transcript
+
+Implement the owner's explicit Professor/Operator target switch with Professor as the default, a versioned shared conversation journal, and the existing persona-backed School teaching path. Preserve existing messages and assessment semantics. Journal direct Operator exchanges as attributed context, never as replayable commands or scored student evidence. Spoken input is saved before teaching generation; retries reuse its event ID. Generated Professor text and actual playback state are recorded without retranscribing TTS. Matrix owns local transcription, SoVITS playback and VRM mouth animation; School receives no new shell/tool authority. Validation includes 52 server tests, 26 frontend tests, production/type checks, local TTS/ASR and an actual native Codex reply in an isolated lesson. Full-duplex voice, automatic Operator delegation and Quest acceptance remain pending.
+
+### October 23 asynchronous Operator delegation and PR checkpoint
+
+The owner now explicitly requested implementation of the Professor's Operator tool and draft PR/issue checkpoints. This authorizes pushing the scoped implementation branches and opening draft PRs in School and Matrix, superseding earlier task-local no-push notes for this checkpoint only; no merge or release is authorized.
+
+Structured teaching output can return one bounded matrix_operator call per turn. School validates and persists its intent; Matrix queues it through the existing Operator session, checks current world scope, and preserves task identity across retries. School verifies actual task status from Matrix, retains attributed results, and can continue teaching while Operator works. UI, voice, avatar and journal changes already in this local implementation are included in the checkpoint. Native full-duplex voice and Quest acceptance remain open. Related: School #5/#3 and Matrix #212/#187.

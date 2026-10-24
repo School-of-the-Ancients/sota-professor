@@ -37,3 +37,20 @@ it('keeps an unsuccessful edit draft, exposes explicit retry, and does not auto-
   expect(screen.getByRole('button', { name: 'Prepare a focused exhibit request' })).toBeInTheDocument();
   expect(onAction).toHaveBeenCalledTimes(2);
 });
+
+
+it('offers a one-click 3D build only for a ready artifact and shows progress without claiming a loaded object', () => {
+  const build = vi.fn();
+  const operator = { connected: true, notice: '', building: null, build, request: vi.fn(), refresh: vi.fn(), review: vi.fn() };
+  const ready = { ...request, preparation: { ...request.preparation, status: 'ready' as const },
+    operator: { adapterId: 'matrix-operator-v1', actionId: 'b'.repeat(64), matrixSessionId: 'a'.repeat(32),
+      requestVersion: 1, lessonRevision: 1, status: 'image_ready' as const, kind: 'artifact' as const,
+      conceptId: 'c'.repeat(32), conceptVersion: 2, selected: false, summary: 'Image ready.',
+      image: { sha256: 'd'.repeat(64), previewUrl: '/preview' }, build: null, environment: null } };
+  const view = render(<ExhibitPanel session={{ ...session, presentations: [ready] }} disabled={false} onAction={vi.fn()} operator={operator} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Create 3D in Blender' }));
+  expect(build).toHaveBeenCalledWith(ready);
+  view.rerender(<ExhibitPanel session={{ ...session, presentations: [{ ...ready, operator: { ...ready.operator, build: { status: 'requested' } } }] }} disabled={false} onAction={vi.fn()} operator={operator} />);
+  expect(screen.queryByRole('button', { name: 'Create 3D in Blender' })).not.toBeInTheDocument();
+  expect(screen.getByText('Operator: building 3D exhibit')).toBeInTheDocument();
+});

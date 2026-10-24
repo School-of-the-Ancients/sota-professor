@@ -3,12 +3,21 @@ const ID = /^[a-f0-9]{32}$/;
 const SHA = /^[a-f0-9]{64}$/;
 const statuses = ['queued', 'generating', 'failed', 'cancelled', 'image_ready', 'object_loaded', 'setting_applied'];
 export function operatorSummary(value) {
+  if (value.status === 'image_ready' && value.build?.status === 'requested')
+    return `Operator is building the 3D exhibit${value.build.creationMode === 'blender' ? ' in Blender' : ''}. The image is ready; the 3D object is not yet confirmed in Matrix.`;
+  if (value.status === 'image_ready' && value.build?.status === 'failed')
+    return 'The 3D build ended without a verified loaded object. Your image is preserved. Open Operator to inspect the result before trying again.';
+  if (value.status === 'image_ready' && value.build?.status === 'completed')
+    return 'The earlier 3D build has a receipt, but its object is not confirmed in the current Matrix world. Open Operator to review it.';
   if (value.status === 'image_ready') return value.kind === 'artifact'
     ? 'Operator confirms the exhibit image is ready. It is an illustration; no 3D object or interaction is established.'
     : 'Operator confirms the setting image is ready. Preview and explicitly apply it in Matrix; the scene has not changed.';
   if (value.status === 'object_loaded') return 'Operator confirms observed Matrix object identity and a completed build receipt. No instructional interaction or simulation is verified.';
   if (value.status === 'setting_applied') return 'Operator confirms the selected background is applied with a matching runtime receipt.';
-  if (value.status === 'failed' || value.status === 'cancelled') return `Operator reports ${value.status}. No new image, scene or object success is established.`;
+  if (value.status === 'failed' || value.status === 'cancelled') {
+    const reason = typeof value.message === 'string' ? value.message.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 300) : '';
+    return `Operator reports ${value.status}.${reason ? ` ${reason}` : ''} No new image, scene or object success is established.`;
+  }
   return `Operator image job is ${value.status}. No image or scene completion is confirmed.`;
 }
 
@@ -34,6 +43,8 @@ export async function acceptOperatorResult(session, input, fetcher = fetch) {
     && ID.test(value.conceptId) && Number.isSafeInteger(value.conceptVersion) && value.conceptVersion > 0
     && value.purpose === (request.kind === 'artifact' ? 'concept' : 'panorama') && typeof value.selected === 'boolean',
   502, 'Operator receipt does not match this saved lesson/request/prompt version.');
+  requireValue(value.build == null || (ID.test(value.build.buildRequestId) && ['requested', 'failed', 'completed'].includes(value.build.status)),
+    502, 'Invalid Operator build identity or status.');
   const ready = ['image_ready', 'object_loaded', 'setting_applied'].includes(value.status);
   requireValue(!ready || (SHA.test(value.image?.sha256) && value.image.previewUrl === `/api/agent/concepts/${value.conceptId}/preview`),
     502, 'Operator image identity is not confirmed.');

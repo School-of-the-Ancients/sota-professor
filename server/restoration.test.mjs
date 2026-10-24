@@ -30,7 +30,8 @@ test('all eleven distinct original personas reach actual assembled teaching prom
     assert.equal(teaching.mentor.systemInstruction, teacher.systemInstruction);
     const prompt = teachingPrompt('teach', teaching);
     assert(prompt.includes(teacher.systemInstruction));
-    assert(prompt.includes('Do not use tools, inspect files, run commands'));
+    assert(prompt.includes('Do not use direct PC tools, inspect files, run commands'));
+    assert(prompt.includes('app-mediated delegation'));
     assert(!/MUST proactively|authentic.*accent|always check their understanding/i.test(teacher.systemInstruction));
     assert.equal(session.mentor.id, teacher.id);
   }
@@ -153,7 +154,7 @@ test('HTTP custom teacher library persists, reuses profiles in actual quests and
   let api = createSchoolApi({ store: new SessionStore(directory), provider });
   const server = createServer((req, res) => void api(req, res));
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  t.after(async () => { await new Promise(resolve => server.close(resolve)); await rm(directory, { recursive: true, force: true }); });
+  t.after(async () => { await new Promise(resolve => server.close(resolve)); await api.preparations.idle(); await rm(directory, { recursive: true, force: true }); });
   const base = `http://127.0.0.1:${server.address().port}/api/school/`;
   const cookie = 'sota-local-learner=' + 'e'.repeat(64);
   const call = async (path, body, owner = cookie) => {

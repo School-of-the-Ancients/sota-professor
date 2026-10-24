@@ -51,6 +51,33 @@ test('loaded objects and applied backgrounds require real receipt identities dis
   const f=await fixture();
   await assert.rejects(acceptOperatorResult(f.session,f.input,transport({...f.value,status:'object_loaded'})),/observed object receipt/);
   await assert.rejects(acceptOperatorResult(f.session,f.input,transport({...f.value,status:'setting_applied'})),/applied setting receipt/);
-  const value={...f.value,status:'object_loaded',build:{status:'completed',runtimeId:matrix,roomId:'room',objectIds:['object'],receipts:['receipt']}};
+  const value={...f.value,status:'object_loaded',build:{buildRequestId:'e'.repeat(32),status:'completed',runtimeId:matrix,roomId:'room',objectIds:['object'],receipts:['receipt']}};
   await acceptOperatorResult(f.session,f.input,transport(value));assert.match(f.request.operator.summary,/No instructional interaction/);
+});
+
+
+test('failed Operator status retains a bounded reason in the lesson and teaching context', async () => {
+  const f = await fixture();
+  const message = 'Codex returned multiple images for one request; request a new version with one image.';
+  await acceptOperatorResult(f.session, f.input, transport({ ...f.value, status: 'failed', image: null, message }));
+  assert.ok(f.request.operator.summary.includes(message));
+  assert.equal(f.request.operator.image, null);
+  await advanceSession(f.provider, f.session, 'message', { revision: 1, text: 'Why did the exhibit fail?' });
+  assert.ok(f.provider.calls.at(-1).context.operatorResults[0].summary.includes(message));
+  const long = 'x'.repeat(600) + '\nprivate tail';
+  await acceptOperatorResult(f.session, f.input, transport({ ...f.value, status: 'failed', image: null, message: long }));
+  assert.ok(f.request.operator.summary.includes('x'.repeat(300)));
+  assert.ok(!f.request.operator.summary.includes('x'.repeat(301)));
+  assert.ok(!f.request.operator.summary.includes('private tail'));
+});
+
+
+test('a 3D build status is distinct from image readiness and does not establish a loaded object', async () => {
+  const f = await fixture();
+  const build = { buildRequestId: 'e'.repeat(32), status: 'requested', creationMode: 'blender', turnId: 'turn' };
+  await acceptOperatorResult(f.session, f.input, transport({ ...f.value, build }));
+  assert.match(f.request.operator.summary, /building the 3D exhibit/);
+  assert.match(f.request.operator.summary, /not yet confirmed/);
+  await acceptOperatorResult(f.session, f.input, transport({ ...f.value, build: { ...build, status: 'failed' } }));
+  assert.match(f.request.operator.summary, /image is preserved/);
 });

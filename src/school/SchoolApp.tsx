@@ -41,6 +41,10 @@ const SchoolApp: React.FC = () => {
     const next = await schoolApi.action(saved, 'operator-result', fields);
     setSession(previous => previous?.id === next.id && next.revision >= previous.revision
       && (next.presentationRevision || 0) >= (previous.presentationRevision || 0) ? next : previous);
+  }, async () => {
+    const saved=currentSession.current;if(!saved||busyRef.current)return;
+    const next=await schoolApi.open(saved.id);
+    setSession(previous=>previous?.id===next.id&&next.revision>=previous.revision?next:previous);
   });
   const preparingExhibit = session?.presentations?.some(request => request.preparation?.status === 'preparing') || false;
 
@@ -209,6 +213,13 @@ const SchoolApp: React.FC = () => {
               <button className={secondary} onClick={download}>Export learning record</button></div>
             <h1 className="font-serif text-3xl text-stone-100">{session.title}</h1>
             <p className="mt-3 text-sm text-stone-400">Your goal: {session.goal}</p>
+            {operator.connected && <div className="mt-4 flex flex-wrap items-center gap-3">
+              <label className="text-sm">Professor appearance <select aria-label="Professor appearance" className={input} value={operator.avatarId} onChange={event=>operator.setAvatarId(event.target.value)}>
+                {operator.avatars.map(avatar=><option key={avatar.catalogId} value={avatar.catalogId}>{avatar.displayName}</option>)}
+              </select></label>
+              <button className={secondary} disabled={busy||operator.placing||!operator.avatars.length} onClick={operator.placeProfessor}>{operator.placing?'Placing professor…':'Place professor in Matrix'}</button>
+              <p className="text-xs text-stone-400">A stylized representation; appearance does not change your teacher or lesson.</p>
+            </div>}
             <div className="mt-5 rounded-xl bg-stone-800/60 p-4"><h2 className="font-serif text-xl text-amber-100">{session.mentor.name}</h2>
               <p className="mt-1 text-xs text-stone-400">{session.mentor.era} · {session.mentor.expertise} · AI interpretation</p>
               <p className="mt-2 text-sm leading-relaxed text-stone-300">{session.mentor.rationale}</p></div>
@@ -217,6 +228,17 @@ const SchoolApp: React.FC = () => {
               <ol className="mt-2 list-decimal space-y-1 pl-5 text-stone-400">{session.objectives.map(objective => <li key={objective.id}>{objective.label}</li>)}</ol></details>
           </section>
           <section aria-label="Teaching conversation" className="space-y-5">
+            {session.operatorTasks?.length ? <section aria-label="Delegated Operator tasks" className="rounded-xl border border-teal-800 p-4">
+              <h3>Operator tasks · continue the conversation while they run</h3>
+              {session.operatorTasks.map(task=><p key={task.id} className="mt-2 text-sm">{task.title} — {task.status}</p>)}
+            </section> : null}
+            {session.conversation && <details className="rounded-xl border border-stone-700 p-4">
+              <summary>Shared Professor / Operator transcript</summary>
+              <p className="mt-2 text-xs text-stone-400">Direct Operator commands are context, not evidence of mastery. Interrupted speech may not have been heard in full.</p>
+              {session.conversation.events.slice(-100).map(event=><article key={event.id} className="mt-3 whitespace-pre-wrap text-sm">
+                <strong>{event.speaker} → {event.recipient}{event.speaker==='professor'?` · ${event.delivery}`:''}</strong><p>{event.text}</p>
+              </article>)}
+            </details>}
             {session.messages.map((message, index) => <article key={index} className={`rounded-xl p-5 ${message.role === 'user' ? 'ml-6 border border-stone-700 bg-stone-800/40' : 'border-l-2 border-amber-200/50 bg-stone-900/50'}`}>
               <h3 className={`mb-2 text-xs font-bold uppercase tracking-widest ${message.role === 'user' ? 'text-stone-400' : 'text-amber-200'}`}>{message.role === 'user' ? 'You' : session.mentor.name}</h3>
               <p className="whitespace-pre-wrap text-sm leading-7 text-stone-200">{message.text}</p>
@@ -264,7 +286,7 @@ const SchoolApp: React.FC = () => {
           <LearningReview session={session} disabled={busy || !provider?.configured} operator={operator} onAction={(action, fields = {}) => run(() => schoolApi.action(session, action, fields))} />
           {busy && <p role="status" className="text-sm text-amber-100">Working on this request. Your saved session remains available.</p>}
         </div>}
-        <footer className="mt-10 border-t border-stone-800 pt-5 text-xs leading-relaxed text-stone-500">Historically inspired teaching, with room for questions and correction. AI can make mistakes; verify consequential claims. Teaching uses native Codex with your ChatGPT sign-in on this computer and sends your goal and saved lesson context to OpenAI. Your plan, model and workspace limits apply. Keep the local School server running; this is a personal local app. No API-key fallback or ChatGPT history import. Teaching tools and live voice remain disabled. Explicit Matrix image/background requests use its advertised native Codex capability; optional spatial creation stays in Matrix controls.</footer>
+        <footer className="mt-10 border-t border-stone-800 pt-5 text-xs leading-relaxed text-stone-500">Historically inspired teaching, with room for questions and correction. AI can make mistakes; verify consequential claims. Teaching uses native Codex with your ChatGPT sign-in on this computer and sends your goal and saved lesson context to OpenAI. Your plan, model and workspace limits apply. Keep the local School server running; this is a personal local app. No API-key fallback or ChatGPT history import. Direct PC tools and native live voice remain disabled. Requested Matrix tasks run through the existing Operator. Explicit Matrix image/background requests use its advertised native Codex capability; optional spatial creation stays in Matrix controls.</footer>
       </main>
     </div>
   </div>;
