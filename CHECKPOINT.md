@@ -1,56 +1,57 @@
-# Private WIP checkpoint
+# Professor implementation checkpoint
 
-This repository starts with a clean source snapshot of the standalone School
-beta remake. Upstream provenance: School-of-the-Ancients/sota-beta at
-5bf4ba01c794b398b3121081c06dd3b6bf6684f4; local implementation checkpoint
-6eeb56601af5aacaf7f38354d9b5d4a76ef872d0 on feat/openai-text-school.
-The original checkout, origin and history remain preserved locally. Upstream
-history was not copied into this new repository; inherited history has not been
-claimed comprehensively free of secrets. The current source snapshot was scanned
-for private/runtime paths and recognizable credentials before checkpointing.
+Reviewed October 24, 2026 against School `a6c2934f267463714b72a14a980d1c472a798aaa`
+and the paired Matrix `v1.3.0-rc.1` source
+`e0135516f9357877d0a1657181fb001abcfe7640`.
 
-The active entry is src/school/SchoolApp.tsx, using the local native Codex
-ChatGPT-auth provider. Read README.md and docs/OPENAI_REBUILD.md for setup and
-limits. Legacy Gemini/Supabase files and original static media are retained as
-reference, not enabled providers. No .school-data, learner records, raw exports,
-screenshots, credentials, generated runtime logs or backups are included.
+## Delivered bounded work
 
-Validated locally on Demerzel after the eligibility correction: 35 server tests, 16 frontend/legacy tests, strict
-School typecheck and build. Eight real subscription generations plus a Chrome
-synthetic learning loop are documented separately from mocked tests. Media,
-voice, deployment and live Matrix execution remain unavailable/deferred.
-A private source repository does not provide a hosted teaching runtime.
+- [#5](https://github.com/School-of-the-Ancients/sota-professor/issues/5): shared
+  conversation, Matrix voice target, avatar/lesson binding and asynchronous
+  Operator handoff. Merged #6, with follow-ups through #12.
+- [#7](https://github.com/School-of-the-Ancients/sota-professor/issues/7): short,
+  exhibit-led dialogue with one focused student action/question. Native fixture
+  checks and recorded Quest exchanges cover follow-up after a student's answer.
+- The Matrix companion adds per-teacher local voices, idle/talking motion,
+  grounded part attention, explicit student selection and transient virtual-view
+  input. The teacher remains separated from privileged world execution.
 
-This is a checkpoint branch, not a deployment or release. No hosting project,
-workflow, billing, collaborators or access grants were configured. Matrix owns
-any future concept image/version selection, Blender build and existing loader;
-School owns teaching intent, objectives and learner records. Instructional AR/VR
-interactivity and simulations are explicitly deferred.
+These close bounded implementation checkpoints, not every integration or device
+requirement. The single Matrix [acceptance record](https://github.com/School-of-the-Ancients/matrix-loading-operator/blob/main/Validation/V1.2-Headset-Acceptance.md)
+distinguishes source, extracted-package and wearer evidence.
 
-The prepared handoff contract separates learning intent, objective, requested
-interaction and visual prompt. Future mockup/asset/load/interaction receipts
-retain concept/version and runtime/object identity with evidence categories.
-See docs/OPERATOR_HANDOFF.md. Shape checks are not proof of runtime execution;
-the current app still reports presentation execution unavailable.
+## Partial and future work
 
-Final follow-up validation: 30 server tests and 16 frontend/legacy tests, strict
-School typecheck and production build pass. One additional native subscription
-turn preserved move/rotate requirements separately from a mockup request, with
-pending status and no execution. The original 3107 comparison server and user
-archives remain in their original worktree; this checkout contains no learner
-archive. Browser reattachment was unavailable at the final refresh, so no forced
-reload or data migration was attempted.
+| Issue | What exists | Still required |
+| --- | --- | --- |
+| [#3](https://github.com/School-of-the-Ancients/sota-professor/issues/3) — live voice | Durable transcript and concurrent slow Operator tasks. | Streaming speech-to-speech, turn detection, interruption/reconnect evaluation and provider decision. |
+| [#4](https://github.com/School-of-the-Ancients/sota-professor/issues/4) — reuse-first lessons | Local exhibit/appearance lookup and background task foundations. | Reviewed lesson templates, objective-driven automatic preload, two independent learner sessions, reuse/failure/latency evaluation. |
+| [#2](https://github.com/School-of-the-Ancients/sota-professor/issues/2) — curriculum research | Research/mapping proposal. | Provider/cost decision, reproducible evaluation, typed reviewed CoursePlan and adopt/adapt/reject decision. |
 
-After reconnection, both preserved comparison URLs (3107 real archive, 3108
-synthetic validation) returned HTTP 200 and 3107 native Codex status was configured.
-They serve the original restoration checkpoint; the later handoff preparation is
-in this source checkout, not silently swapped into the user's running archive.
-The final current-source build passed again. See the validation record for exact
-served/source distinctions and the browser-control limitation.
+Matrix retains broader integration/recovery (#187/#31), avatar art and generation
+reliability (#214), per-model motion/performance (#215), reusable publication
+(#211), and interactive experiment contracts (#32). A successful animated model
+is not a validated physical simulation or a finished curriculum system.
 
-The Tesla eligibility correction is documented in docs/TESLA_ELIGIBILITY_FIX.md.
-Real historical people do not need professional teaching employment. The same
-identity/persona policy is applied to both existing comparison apps, while their
-archives and unrelated source differences remain preserved. Main runtime commit:
-db3ed482bbe45abe083c64046acf5c5b7f9627f7. Two additional live native generations
-accepted and persisted Tesla in a separate synthetic archive only.
+## Release evidence
+
+Both repositories have an immutable `v1.3.0-rc.1` source tag. The [paired Matrix
+release](https://github.com/School-of-the-Ancients/matrix-loading-operator/releases/tag/v1.3.0-rc.1)
+is published; its manifest records both code identities and package hashes.
+Release preparation recorded 83 School server tests, 27 UI tests, typecheck and
+builds, plus Matrix's 882 runtime tests, 37 focused Professor service tests and
+12 packaging tests. The extracted package checked UI assets, an empty School
+archive, six original avatar imports and hosted-world token separation.
+
+Recorded Quest use shows an embodied teacher, dialogue during a build, selected
+part explanations and interactive questions. The owner confirmed responsive AR
+and persistent floating transcript text. Those are bounded observations from
+the development installation, not a full headset run of the extracted package.
+Private footage and learner records are not published in the repositories.
+
+## Provenance
+
+The standalone remake originated from `sota-beta` at
+`5bf4ba01c794b398b3121081c06dd3b6bf6684f4`. Original source, legacy components and
+their history are retained. The [earlier checkpoint record](docs/archive/pre-embodied-CHECKPOINT.md)
+describes that text-only phase; its deferred-feature statements are historical.
