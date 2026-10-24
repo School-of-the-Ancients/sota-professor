@@ -4,10 +4,11 @@ The active architecture and setup are in [README.md](README.md); current deliver
 partial and future issue status is in [CHECKPOINT.md](CHECKPOINT.md). This document
 retains dated implementation decisions. An old entry saying a feature was excluded,
 unmerged or unauthorized describes that phase, not the current implementation.
-Current user instructions take precedence. The October 24 review changes only
-documentation and issue status; it does not add a provider, alter archives or restart
-services. Full-duplex voice, reviewed curriculum preload and broad Quest acceptance
-remain open.
+Current user instructions take precedence. The October 24 consolidation includes
+Professor #14 and Matrix #229/#230, updates current roadmaps and retains prior
+release/acceptance evidence. P4/P5 core behavior is implemented; P3 native live
+voice and reviewed curriculum consumption remain separate work. No learner
+history or world reset accompanies source consolidation.
 
 ### Point & Speak exhibit practice
 

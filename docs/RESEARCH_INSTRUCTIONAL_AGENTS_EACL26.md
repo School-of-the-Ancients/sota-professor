@@ -11,6 +11,28 @@
 - [Instructional Agents skills](https://github.com/DaRL-GenAI/instructional_agents-skills) — optional Claude Code workflows for course generation, slide conversion and review; not a dependency on Claude for School.
 - Existing SOTA adaptive curriculum concept: [sota-v2 #76](https://github.com/School-of-the-Ancients/sota-v2/issues/76). Existing cross-project School educational sequence: [roadmap #11](https://github.com/School-of-the-Ancients/school-of-the-ancients-roadmap/issues/11) (closed historical issue; do not reopen without scope/evidence).
 
+## Pinned source review — October 24, 2026
+
+Inspected upstream commit `f835eb45f508889cc9f3e6bb5af03f4f3590f678`:
+[README](https://github.com/DaRL-GenAI/instructional_agents/blob/f835eb45f508889cc9f3e6bb5af03f4f3590f678/README.md),
+[MIT license](https://github.com/DaRL-GenAI/instructional_agents/blob/f835eb45f508889cc9f3e6bb5af03f4f3590f678/LICENSE),
+[package metadata](https://github.com/DaRL-GenAI/instructional_agents/blob/f835eb45f508889cc9f3e6bb5af03f4f3590f678/pyproject.toml)
+and requirements. It advertises EACL 2026 Main, ADDIE/human-review review,
+syllabus/assessment/script/slide outputs and API-key model calls. Python >=3.11
+is required. Dependencies include OpenAI, FastAPI/Pydantic, pandas/numpy, PDF,
+Playwright and presentation tooling; vector storage is optional in package
+metadata but present in requirements. Several requirements have lower bounds
+rather than a complete locked environment. Optional exports introduce Node/TeX;
+one optional code-image path documents a global npm install. These are reasons
+to evaluate an isolated adapter, not import the full toolchain into Professor.
+
+Read-only review did not install or run upstream, spend API credits, or validate
+its educational quality. Preserve MIT notices if code is reused. Prefer a
+provider-neutral CoursePlan boundary and compare a small authored/native baseline
+before selecting upstream. The next deliverable is a two-lesson reviewed draft,
+with one optional exhibit intent, source citations and explicit acceptance;
+not automatic publication or a wholesale backend migration.
+
 ## Why this matters
 
 SOTA currently owns goal selection, historical mentor identity, Socratic dialogue, objective-linked quizzes, mastery review, and learner records. It does **not** need to invent a full multi-role instructional department before evaluating upstream's available course-authoring research.

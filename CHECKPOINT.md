@@ -1,57 +1,67 @@
 # Professor implementation checkpoint
 
-Reviewed October 24, 2026 against School `a6c2934f267463714b72a14a980d1c472a798aaa`
-and the paired Matrix `v1.3.0-rc.1` source
-`e0135516f9357877d0a1657181fb001abcfe7640`.
+Consolidated October 24, 2026: [Professor #14](https://github.com/School-of-the-Ancients/sota-professor/pull/14),
+[Matrix #229](https://github.com/School-of-the-Ancients/matrix-loading-operator/pull/229)
+and [Matrix #230](https://github.com/School-of-the-Ancients/matrix-loading-operator/pull/230).
+The PR merge records identify the source checkpoint. See the [roadmap](docs/ROADMAP.md)
+for the selected live-voice milestone and the following curriculum pilot.
 
-## Delivered bounded work
+## Implemented
 
-- [#5](https://github.com/School-of-the-Ancients/sota-professor/issues/5): shared
-  conversation, Matrix voice target, avatar/lesson binding and asynchronous
-  Operator handoff. Merged #6, with follow-ups through #12.
-- [#7](https://github.com/School-of-the-Ancients/sota-professor/issues/7): short,
-  exhibit-led dialogue with one focused student action/question. Native fixture
-  checks and recorded Quest exchanges cover follow-up after a student's answer.
-- The Matrix companion adds per-teacher local voices, idle/talking motion,
-  grounded part attention, explicit student selection and transient virtual-view
-  input. The teacher remains separated from privileged world execution.
+- Native Codex teacher/goal/lesson/quiz/remediation, attributed durable journal,
+  per-teacher voices and asynchronous Matrix Operator delegation (#5/#7 and follow-ups).
+- P1/P2 avatar/cast/selection; P4 conversation during background creation;
+  P5 persisted teacher bindings, pinned appearance and reusable roster.
+- AR/VR goals, formal quiz answers/progress and creation status in the workspace.
+  Static exhibit descriptions are hidden by default, with explicit show/read controls.
+- Tracked Socratic practice: observe, explain, predict and transfer; one short
+  question at a time, hints/revisions, explicit point answers and saved progress.
+  School owns advancement and requires cited learner evidence beyond pointing.
+- Answer-revealing labels disappear during questions and return for lecture/exploration.
+  The pointer/highlight remains available so learners can identify their selection.
+- Spoken start-quiz recognition tolerates filler and transcription variants;
+  ordinary teaching does not pretend that a tracked practice session started.
+- Hard conversation/practice turn caps removed. Full history remains saved;
+  model requests use a bounded recent context window. This does not promise
+  unlimited storage, memory or provider context.
+- Fresh lessons prefer available locally upgraded teacher models; saved explicit
+  appearance pins and old worlds remain intact.
 
-These close bounded implementation checkpoints, not every integration or device
-requirement. The single Matrix [acceptance record](https://github.com/School-of-the-Ancients/matrix-loading-operator/blob/main/Validation/V1.2-Headset-Acceptance.md)
-distinguishes source, extracted-package and wearer evidence.
+## Validation and limits
 
-## Partial and future work
+Current source checks: **100 server tests, 27 UI tests, School typecheck and
+standalone/Matrix UI builds; 910 Matrix runtime tests, 40 Professor service tests,
+13 release-builder tests and Matrix production build**. Existing chunk-size
+warnings remain. Automated and synthetic checks are separate from native-provider
+and wearer evidence.
 
-| Issue | What exists | Still required |
-| --- | --- | --- |
-| [#3](https://github.com/School-of-the-Ancients/sota-professor/issues/3) — live voice | Durable transcript and concurrent slow Operator tasks. | Streaming speech-to-speech, turn detection, interruption/reconnect evaluation and provider decision. |
-| [#4](https://github.com/School-of-the-Ancients/sota-professor/issues/4) — reuse-first lessons | Local exhibit/appearance lookup and background task foundations. | Reviewed lesson templates, objective-driven automatic preload, two independent learner sessions, reuse/failure/latency evaluation. |
-| [#2](https://github.com/School-of-the-Ancients/sota-professor/issues/2) — curriculum research | Research/mapping proposal. | Provider/cost decision, reproducible evaluation, typed reviewed CoursePlan and adopt/adapt/reject decision. |
+Recorded development use includes embodied dialogue during creation, part
+selection and returning to saved lessons. A real tracked Ada practice session was
+started without inventing learner responses. A complete fresh Quest Socratic
+course, every recovery path and per-avatar performance are not accepted by these
+checks. Preserve Matrix's [single acceptance record](https://github.com/School-of-the-Ancients/matrix-loading-operator/blob/main/Validation/V1.2-Headset-Acceptance.md)
+and broader #187/#214/#215 owners.
 
-Matrix retains broader integration/recovery (#187/#31), avatar art and generation
-reliability (#214), per-model motion/performance (#215), reusable publication
-(#211), and interactive experiment contracts (#32). A successful animated model
-is not a validated physical simulation or a finished curriculum system.
+## Remaining
 
-## Release evidence
+- [#3](https://github.com/School-of-the-Ancients/sota-professor/issues/3): optional
+  streaming voice, automatic turns, barge-in, reconnect and provider/cost evaluation.
+- [#2](https://github.com/School-of-the-Ancients/sota-professor/issues/2): curriculum
+  contract, two-lesson reviewed draft and EACL authoring comparison.
+- [#4](https://github.com/School-of-the-Ancients/sota-professor/issues/4): reviewed
+  template consumption, independent learner sessions and objective-linked exhibit reuse.
 
-Both repositories have an immutable `v1.3.0-rc.1` source tag. The [paired Matrix
-release](https://github.com/School-of-the-Ancients/matrix-loading-operator/releases/tag/v1.3.0-rc.1)
-is published; its manifest records both code identities and package hashes.
-Release preparation recorded 83 School server tests, 27 UI tests, typecheck and
-builds, plus Matrix's 882 runtime tests, 37 focused Professor service tests and
-12 packaging tests. The extracted package checked UI assets, an empty School
-archive, six original avatar imports and hosted-world token separation.
+## Release identity and lineage
 
-Recorded Quest use shows an embodied teacher, dialogue during a build, selected
-part explanations and interactive questions. The owner confirmed responsive AR
-and persistent floating transcript text. Those are bounded observations from
-the development installation, not a full headset run of the extracted package.
-Private footage and learner records are not published in the repositories.
+Published `v1.3.0-rc.1` remains Matrix
+`e0135516f9357877d0a1657181fb001abcfe7640` / School
+`a6c2934f267463714b72a14a980d1c472a798aaa`. The separate draft `v1.3.0-rc.2`
+package pins Matrix `9e0158ec475e206d65eb3de070c3c1535ba24159` / School
+`cc4896019a78fb0d0ea9e6bedeac7802e5ab1ef5`; it predates the new XR/Socratic
+checkpoint and is not its distribution. Neither package is replaced by these merges.
 
-## Provenance
-
-The standalone remake originated from `sota-beta` at
-`5bf4ba01c794b398b3121081c06dd3b6bf6684f4`. Original source, legacy components and
-their history are retained. The [earlier checkpoint record](docs/archive/pre-embodied-CHECKPOINT.md)
-describes that text-only phase; its deferred-feature statements are historical.
+Professor succeeds `sota-beta` from imported commit
+`5bf4ba01c794b398b3121081c06dd3b6bf6684f4`. Its older Gemini/Supabase UI and
+voice code remain historical references. [Earlier checkpoint](docs/archive/pre-embodied-CHECKPOINT.md)
+and [beta roadmap](docs/archive/sota-beta-ROADMAP-2025-10-04.md) preserve that history.
+Private footage, transcripts and learner records remain outside the repository.

@@ -2,8 +2,9 @@
 
 Talk to a historically inspired teacher, explore a lesson, and check your
 understanding. School owns the teacher, lesson, assessments and learner record.
-The optional Matrix connection gives the teacher a body and lets it request
-exhibits while the conversation continues.
+Matrix/Loading Operator is the spatial creation module within School of the
+Ancients. Its optional connection gives the teacher a body and lets it request
+exhibits while conversation continues; Operator also retains free-form AR creation.
 
 ## Current implementation
 
@@ -22,7 +23,9 @@ reference; they are not the active default application.
 | Native full-duplex speech and automatic turn detection | Not implemented. Current Matrix voice uses push-to-talk. |
 | Reviewed reusable courses and objective-driven exhibit preload | Partial foundations; not a completed curriculum library. |
 
-See [checkpoint and remaining work](CHECKPOINT.md). The shared source tag
+Socratic point-and-speak practice, AR learning goals/quiz progress and creation
+status are part of the latest source checkpoint. See [checkpoint and remaining
+work](CHECKPOINT.md) and the [current roadmap](docs/ROADMAP.md). The shared source tag
 `v1.3.0-rc.1` pairs this repository with Matrix; later documentation does not
 change that frozen code or its package.
 
