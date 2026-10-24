@@ -7,6 +7,7 @@ import { initialExhibit, editPresentation } from './exhibit-preparation.mjs';
 import { journal, appendEvent, conversationContext } from './conversation.mjs';
 import { captureOperatorCalls } from './operator-tasks.mjs';
 import { interactionSettings, interactionProblems } from './teaching-interaction.mjs';
+import { avatarCue } from './embodiment.mjs';
 
 export class SchoolError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -34,7 +35,7 @@ export function validatePlan(plan) {
 }
 
 export function validateTurn(turn) {
-  const keys = ['text','suggestions',...(Object.hasOwn(turn||{},'presentationRequests')?['presentationRequests']:[]),...(Object.hasOwn(turn||{},'toolCalls')?['toolCalls']:[])];
+  const keys = ['text','suggestions',...(Object.hasOwn(turn||{},'presentationRequests')?['presentationRequests']:[]),...(Object.hasOwn(turn||{},'toolCalls')?['toolCalls']:[]),...(Object.hasOwn(turn||{},'avatarAction')?['avatarAction']:[])];
   requireValue(exact(turn, keys) && text(turn.text, 8000) && strings(turn.suggestions, 0, 3, 300)
     && (!Object.hasOwn(turn, 'presentationRequests') || (Array.isArray(turn.presentationRequests) && turn.presentationRequests.length <= 2))
     && (!Object.hasOwn(turn, 'toolCalls') || (Array.isArray(turn.toolCalls) && turn.toolCalls.length<=1 && turn.toolCalls.every(call=>
@@ -93,11 +94,12 @@ const context = session => ({
   completionGuidance: 'Teach objectives and offer a check when appropriate. Only server scoring can mark this short check complete. Conversation review is independent and cannot establish lasting mastery. Never announce completion before a submitted check.',
 });
 
-async function teachingTurn(provider, session, task) {
-  const input = { ...context(session), task };
+async function teachingTurn(provider, session, task, scene = null) {
+  const input = { ...context(session), task, embodiedScene: scene };
   const original = validateTurn(await provider.generate('teach', input));
   const problems = interactionProblems(original.text, input.interaction);
-  if (!problems.length) return original;
+  const cue = avatarCue(original.avatarAction, scene);
+  if (!problems.length) return { ...original, avatarCue: cue };
   const revised = validateTurn(await provider.generate('teach', {
     ...input,
     task: 'Rewrite the draft response for this same turn using the conversational policy. Preserve its grounded meaning and task intent. Do not add new facts, claim new execution, or answer your own question. Only the revised text and suggestions will be used; the original tool/presentation requests are retained exactly once.',
@@ -105,7 +107,7 @@ async function teachingTurn(provider, session, task) {
   }));
   requireValue(!interactionProblems(revised.text, input.interaction).length, 502,
     'The professor could not prepare a short, single-question reply. No new professor reply was saved; try again.');
-  return { ...original, text: revised.text, suggestions: revised.suggestions };
+  return { ...original, text: revised.text, suggestions: revised.suggestions, avatarCue: cue };
 }
 export const defaultPreferences = { difficulty: 'beginner', style: 'balanced', timeBudget: '' };
 function preferences(value = defaultPreferences) {
@@ -120,7 +122,8 @@ function applyTurn(session, turn, replyTo = null) {
   requireValue((session.presentations?.length || 0) + records.length <= 40, 422, 'This quest has reached its presentation request limit. No media was created.');
   session.messages.push({ role: 'assistant', text: turn.text });
   const replyId=replyTo ? `reply:${replyTo}` : randomUUID();
-  appendEvent(session, { id: replyId, speaker: 'professor', recipient: 'learner', inputKind: 'text', text: turn.text, worldId: '' }, true);
+  const event = appendEvent(session, { id: replyId, speaker: 'professor', recipient: 'learner', inputKind: 'text', text: turn.text, worldId: turn.avatarCue?.roomId || '' }, true);
+  if (turn.avatarCue) event.avatarCue = turn.avatarCue;
   captureOperatorCalls(session,turn,replyId);
   session.suggestions = turn.suggestions;
   session.presentations = [...(session.presentations || []), ...records];
@@ -147,7 +150,7 @@ export async function createSession(provider, input, customTeachers = [], onSele
   return session;
 }
 
-export async function advanceSession(provider, existing, action, input, conversationEventId = null) {
+export async function advanceSession(provider, existing, action, input, conversationEventId = null, scene = null) {
   requireValue(input && Number.isInteger(input.revision) && input.revision === existing.revision, 409, 'This session changed. Reopen it before trying again.');
   const session = structuredClone(existing);
   session.mentor = restoreMentor(session.mentor);
@@ -161,7 +164,7 @@ export async function advanceSession(provider, existing, action, input, conversa
     if (!conversationEventId) appendEvent(session, { id: turnId, speaker: 'learner', recipient: 'professor', inputKind: 'text', text: input.text.trim(), worldId: '' }, true);
     const turn = await teachingTurn(provider, session, session.status === 'needs_review'
       ? 'Respond to the learner’s latest answer and focus on one missed concept using the feedback. Give one short hint or a small example and at most one question, then wait. Use an existing relevant exhibit if supported. Do not award completion.'
-      : 'Respond to the learner’s latest answer or request, then offer one useful next step. Prefer observing or using an existing relevant exhibit over lecturing. Ask at most one focused question and wait; do not give its answer. Follow the requested level of detail and do not award completion.');
+      : 'Respond to the learner’s latest answer or request, then offer one useful next step. Prefer observing or using an existing relevant exhibit over lecturing. Ask at most one focused question and wait; do not give its answer. Follow the requested level of detail and do not award completion.', scene);
     applyTurn(session, turn, turnId);
     if (session.status === 'needs_review') session.reviewCompleted = true;
   } else if (action === 'assess') {

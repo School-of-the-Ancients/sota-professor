@@ -149,3 +149,7 @@ The owner requested Quest AR, local voice/lip-sync and concurrent Matrix builds,
 ### Short, exhibit-led conversation
 
 The owner selected School #7 and supplied Riko's spoken conversation prompt as a style reference. Apply natural short spoken turns to existing/new lessons without changing persona identity, old transcripts, quiz scoring or world authority. Default to one observation/action/question and wait, use actual exhibit/task evidence, and avoid lists or canned assistant language. Explicit detail requests allow longer explanations. Validate new replies and allow one rewrite for verbosity/multiple questions, retaining original validated tool intent exactly once. Do not introduce Riko's unsupported animation tags into speech; pose/catalog work remains future scope.
+
+### Exhibit attention and merged source checkpoint
+
+The owner subsequently selected natural body motion, exhibit-directed gaze/pointing and merging the existing Professor PRs. This supersedes the earlier no-merge notes for School PR #6 and Matrix PR #213 only. Scene identities from the existing local Matrix service ground one optional presentation cue per reply; the saved journal owns that cue and the Matrix renderer revalidates its target during speech. No model assets or learner data are published. Checkpoint the merged sources with the matching `checkpoint/professor-exhibit-attention-2026-10-23` tag in both repositories. Keep native full-duplex voice, avatar catalog expansion and Quest wearer acceptance open; this is not a frozen-v1.2 release.

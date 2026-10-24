@@ -7,6 +7,7 @@ import { acceptOperatorResult } from './operator.mjs';
 import { journal, appendEvent, markDelivery } from './conversation.mjs';
 import { acceptTaskResult } from './operator-tasks.mjs';
 import { DeviceLinks } from './device-links.mjs';
+import { readEmbodiedScene } from './embodiment.mjs';
 
 const COOKIE = 'sota-local-learner';
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
@@ -24,7 +25,7 @@ async function readBody(req) {
   catch { throw new SchoolError(400, 'Invalid JSON request.'); }
 }
 
-export function createSchoolApi({ store, provider, now = Date.now }) {
+export function createSchoolApi({ store, provider, now = Date.now, readScene = readEmbodiedScene }) {
   const preparations = new ExhibitPreparer({ store, provider });
   const deviceLinks = new DeviceLinks(now);
   const rates = new Map();
@@ -140,7 +141,7 @@ export function createSchoolApi({ store, provider, now = Date.now }) {
           const event = events.find(item => item.id === body.eventId && item.speaker === 'learner' && item.recipient === 'professor');
           requireValue(event, 400, 'Record this learner turn before delivery.');
           if (events.some(item => item.id === `reply:${event.id}`)) return { value: data.sessions[index] };
-          data.sessions[index] = await advanceSession(provider, data.sessions[index], 'message', { revision: body.revision, text: event.text }, event.id);
+          data.sessions[index] = await advanceSession(provider, data.sessions[index], 'message', { revision: body.revision, text: event.text }, event.id, await readScene(match[1]));
           return { write: true, value: data.sessions[index] };
         }
         if (match[2] === 'operator-result') {
@@ -151,7 +152,8 @@ export function createSchoolApi({ store, provider, now = Date.now }) {
           const request = data.sessions[index].presentations?.find(item => item.origin === 'initial');
           requireValue(!request || !preparations.jobs.has(`${owner}:${request.preparation?.token}`), 409, 'The initial exhibit request is already preparing. No duplicate job was started.');
         }
-        const updated = await advanceSession(provider, data.sessions[index], match[2], body);
+        const updated = await advanceSession(provider, data.sessions[index], match[2], body, null,
+          match[2] === 'message' ? await readScene(match[1]) : null);
         if (match[2] === 'exhibit-prepare') ticket = preparations.start(owner, updated);
         data.sessions[index] = updated;
         return { write: true, value: updated };
