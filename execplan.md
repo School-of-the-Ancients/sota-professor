@@ -224,3 +224,17 @@ The owner selected additional professor bodies and closest-available matching. M
 ### Selected-surface snapshot vision
 
 The owner requested exact item-surface pointing beyond predefined parts and an image the Professor can describe. Matrix captures a user-selected virtual point and one marked virtual-view image, with trigger/grip bindings preserved. School validates the bounded point and JPEG against the current scene and delivers the image through native Codex input within the same restricted teaching turn. It stores the point reference and reply, never the image bytes. Temporary files are removed after inference; there is no camera passthrough, new tool access or API-key fallback. Explanations separate visible evidence, metadata and uncertain function. Automated checks, a real-model capture and native model inference are separate from pending Quest wearer acceptance. Preserve all existing archives and worlds.
+
+### Socratic exhibit practice
+
+The owner requested implementation and deployment of adaptive spoken learning.
+New practice starts with a source-grounded observation puzzle, then uses the
+existing native teaching provider to review explanations, predictions and
+transfer. Each model-reviewed milestone retains an exact learner quote and a
+reason; observation alone is not scored as understanding. Short single-question
+turns, hints, revisions and stage-scoped label masking keep interaction in AR.
+Existing recognition activity remains saved until the learner starts the new
+mode. Formal quiz scores, scene state, identities and archives are unchanged.
+Validation includes malformed-evidence rejection, stale scene/round handling,
+idempotency, voice journal reuse, transfer selections and native-provider review
+in a synthetic lesson. Physical wearer acceptance remains separate.

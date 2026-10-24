@@ -26,6 +26,14 @@ export function mockProvider() {
     async generate(kind, context) {
       this.calls.push({ kind, context: structuredClone(context) });
       if (this.fail) throw new Error('private upstream detail');
+      if (kind === 'practice') return {
+        decision:context.task==='review'?'advance':context.task==='hint'?'scaffold':'probe',
+        feedback:context.task==='opening'?'Let us explore how this illustrative machine carries motion.':'Your explanation connects input with motion.',
+        question:context.task==='opening'?'Where would you supply effort to start this machine?':
+          context.nextStage==='predict'?'What would happen if that connection came loose, and why?':
+          context.nextStage==='transfer'?'How is this like turning a bicycle pedal?':'What about this connection helps you explain the motion?',
+        evidenceQuote:context.task==='review'?context.learnerText:'',
+        evidenceReason:context.task==='review'?'Connects an input action to a described result.':''};
       if (kind === 'plan') return structuredClone(plan);
       if (kind === 'exhibit') return { kind: 'artifact', title: 'Algorithm sequence cards', description: 'Three cards illustrating an ordered sequence of operations.', objectiveId: context.quest.objectives[0].id,
         learningIntent: 'Help the learner trace the operation sequence.', interaction: { requirement: 'none', description: 'A static explanatory exhibit only.', capabilities: [] } };

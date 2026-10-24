@@ -11,7 +11,7 @@ import { readEmbodiedScene } from './embodiment.mjs';
 import { avatarCatalog,chooseAppearance } from './appearance.mjs';
 import { AppearancePreparer } from './appearance-preparation.mjs';
 import {checkedVisual} from './surface-visual.mjs';
-import {advancePointPractice} from './point-practice.mjs';
+import {advancePractice} from './socratic-practice.mjs';
 
 const COOKIE = 'sota-local-learner';
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
@@ -131,7 +131,7 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
         requireValue(req.method === 'POST' && match[2], 405, 'Method not allowed.');
         if(match[2]==='practice'){
           const prior=data.sessions[index];
-          data.sessions[index]=advancePointPractice(prior,body,await readScene(match[1]));
+          data.sessions[index]=await advancePractice(provider,prior,body,await readScene(match[1]));
           return {write:data.sessions[index]!==prior,value:data.sessions[index]};
         }
         if(match[2]==='appearance'){

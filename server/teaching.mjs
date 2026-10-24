@@ -10,6 +10,8 @@ import { captureOperatorCalls } from './operator-tasks.mjs';
 import { interactionSettings, interactionProblems } from './teaching-interaction.mjs';
 import { avatarCue } from './embodiment.mjs';
 import {publicPractice} from './point-practice.mjs';
+import {publicSocraticPractice} from './socratic-practice.mjs';
+const practiceView=value=>value?.mode==='socratic'?publicSocraticPractice(value):publicPractice(value);
 
 export class SchoolError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -74,7 +76,7 @@ export function publicSession(session) {
   journal(copy);
   copy.mentor = restoreMentor(copy.mentor);
   if (copy.quiz) copy.quiz.questions = copy.quiz.questions.map(({ answer, explanation, ...question }) => question);
-  if(copy.practice)copy.practice=publicPractice(copy.practice);
+  if(copy.practice)copy.practice=practiceView(copy.practice);
   return copy;
 }
 
@@ -98,7 +100,7 @@ const context = session => ({
       runtimeId: request.operator.build?.runtimeId, objectIds: request.operator.build?.objectIds?.slice(0,8),
       environment: request.operator.environment, interactionVerified: false })),
   assessmentFeedback: session.attempts.at(-1)?.feedback ?? [],
-  exhibitPractice:publicPractice(session.practice),
+  exhibitPractice:practiceView(session.practice),
   completionGuidance: 'Teach objectives and offer a check when appropriate. Only server scoring can mark this short check complete. Conversation review is independent and cannot establish lasting mastery. Never announce completion before a submitted check.',
 });
 
