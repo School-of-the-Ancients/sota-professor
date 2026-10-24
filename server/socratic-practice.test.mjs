@@ -14,6 +14,13 @@ let sequence=0;
 const act=(provider,s,action,extra={},world=scene())=>advancePractice(provider,s,{revision:s.revision,requestId:`r${++sequence}`,action,
   ...(action==='start'?{}:{practiceId:s.practice.id,roundId:s.practice.roundId}),...extra},world);
 
+test('an explicit practice request can start after the ordinary conversation limit without extending old chat',async()=>{
+  const original=initial();original.messages=Array.from({length:81},(_,i)=>({role:i%2?'assistant':'user',text:'Earlier lesson turn.'}));
+  const started=await act(mockProvider(),original,'start');
+  assert.equal(started.practice.mode,'socratic');assert.equal(started.practice.stage,'observe');
+  assert.deepEqual(started.messages,original.messages);assert.deepEqual(started.quiz,original.quiz);
+});
+
 test('new dialogue preserves legacy practice, and transfer can reference another current exhibit',async()=>{
   const provider=mockProvider(),world=scene();
   let s=advancePointPractice(initial(),{action:'start',revision:1,requestId:'legacy'},world);
