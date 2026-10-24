@@ -9,6 +9,7 @@ import {surfaceInScene} from './surface-visual.mjs';
 import { captureOperatorCalls } from './operator-tasks.mjs';
 import { interactionSettings, interactionProblems } from './teaching-interaction.mjs';
 import { avatarCue } from './embodiment.mjs';
+import {publicPractice} from './point-practice.mjs';
 
 export class SchoolError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -73,6 +74,7 @@ export function publicSession(session) {
   journal(copy);
   copy.mentor = restoreMentor(copy.mentor);
   if (copy.quiz) copy.quiz.questions = copy.quiz.questions.map(({ answer, explanation, ...question }) => question);
+  if(copy.practice)copy.practice=publicPractice(copy.practice);
   return copy;
 }
 
@@ -96,6 +98,7 @@ const context = session => ({
       runtimeId: request.operator.build?.runtimeId, objectIds: request.operator.build?.objectIds?.slice(0,8),
       environment: request.operator.environment, interactionVerified: false })),
   assessmentFeedback: session.attempts.at(-1)?.feedback ?? [],
+  exhibitPractice:publicPractice(session.practice),
   completionGuidance: 'Teach objectives and offer a check when appropriate. Only server scoring can mark this short check complete. Conversation review is independent and cannot establish lasting mastery. Never announce completion before a submitted check.',
 });
 
@@ -168,7 +171,7 @@ export async function advanceSession(provider, existing, action, input, conversa
   session.mentor = restoreMentor(session.mentor);
   if (action === 'message') {
     requireValue(exact(input, ['revision', 'text']) && text(input.text, 4000), 400, 'Enter a message up to 4,000 characters.');
-    requireValue(session.status !== 'quiz', 409, 'Submit the current quiz before continuing the conversation.');
+    requireValue(session.status !== 'quiz'||session.practice, 409, 'Submit the current quiz before continuing the conversation.');
     requireValue(session.messages.length < 81, 422, 'This quest has reached its conversation limit. Start a new quest; the full session remains saved.');
     const turnId = conversationEventId || randomUUID();
     if (!conversationEventId) journal(session);

@@ -32,6 +32,9 @@ export interface Attempt {
   feedback: { objectiveId: string; prompt: string; correct: boolean; explanation: string }[];
 }
 export interface SchoolSession {
+  practice?: { id:string; status:'active'|'complete'|'stopped'; objectId:string; objectLabel:string;
+    index:number; total:number; found:number; streak:number; hints:number; roundId:string|null;
+    question:string; feedback:string; replyId:string };
   appearance?: {mode:'auto'|'manual';catalogId:string;reason:string;method:string;representation:string;status?:string;jobId?:string;token?:string};
   appearanceRevision?: number;
   operatorTasks?: {id:string;title:string;instruction:string;objectiveId:string;status:string;sourceReplyId:string;execution:null|{result:string;message:string;status:string}}[];

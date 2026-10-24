@@ -11,6 +11,7 @@ import { readEmbodiedScene } from './embodiment.mjs';
 import { avatarCatalog,chooseAppearance } from './appearance.mjs';
 import { AppearancePreparer } from './appearance-preparation.mjs';
 import {checkedVisual} from './surface-visual.mjs';
+import {advancePointPractice} from './point-practice.mjs';
 
 const COOKIE = 'sota-local-learner';
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
@@ -103,7 +104,7 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
         res.setHeader('Set-Cookie', `${COOKIE}=${linkedOwner}; HttpOnly; SameSite=Strict; Path=/api/school; Max-Age=31536000`);
         return send(200, { linked: true });
       }
-      const match = path.match(new RegExp(`^/api/school/sessions/(${UUID})(?:/(message|quiz|answers|assess|presentation|presentation-edit|exhibit-prepare|operator-result|operator-task-result|conversation|spoken-message|speech-delivery|appearance))?$`));
+      const match = path.match(new RegExp(`^/api/school/sessions/(${UUID})(?:/(message|quiz|answers|assess|practice|presentation|presentation-edit|exhibit-prepare|operator-result|operator-task-result|conversation|spoken-message|speech-delivery|appearance))?$`));
       if (req.method === 'GET' && path === '/api/school/sessions') {
         const list = await store.transaction(owner, data => ({ value: data.sessions.map(session => ({ id: session.id, title: session.title,
           mentorName: session.mentor.name, status: session.status, updatedAt: session.updatedAt })).reverse() }), { readOnly: true });
@@ -128,6 +129,11 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
         requireValue(index >= 0, 404, 'Session not found in this browser archive.');
         if (req.method === 'GET' && !match[2]) { if(prepareAppearances)appearances.resume(owner,data.sessions[index]); return { value: data.sessions[index] }; }
         requireValue(req.method === 'POST' && match[2], 405, 'Method not allowed.');
+        if(match[2]==='practice'){
+          const prior=data.sessions[index];
+          data.sessions[index]=advancePointPractice(prior,body,await readScene(match[1]));
+          return {write:data.sessions[index]!==prior,value:data.sessions[index]};
+        }
         if(match[2]==='appearance'){
           if(prepareAppearances&&body?.mode==='auto'&&body.revision===data.sessions[index].revision&&Object.keys(body).length===2){
             avatarTicket=appearances.start(owner,data.sessions[index]);

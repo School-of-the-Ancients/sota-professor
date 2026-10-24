@@ -9,6 +9,19 @@ documentation and issue status; it does not add a provider, alter archives or re
 services. Full-duplex voice, reviewed curriculum preload and broad Quest acceptance
 remain open.
 
+### Point & Speak exhibit practice
+
+The owner's subsequent AR request adds a bounded part-identification practice
+beside the formal quiz. School owns the persisted activity, current round,
+exact part checks, feedback, attempt IDs and progress. Matrix provides the
+current annotated exhibit, explicit A/X selection and existing Professor voice.
+Prompts explain authored annotations before asking for the part; they do not
+assert validated mechanics. Wrong selections retry the same round; correct
+selections advance. Hints, repeat and stop are explicit voice commands. Formal
+quiz answers, scores and completion are preserved. Public responses omit the
+internal part-answer plan. Device readability/input/voice acceptance stays
+separate from synthetic HTTP and controller evidence.
+
 
 ### Direct invention requests after historical preview failures
 
