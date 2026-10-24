@@ -4,7 +4,8 @@ Consolidated October 24, 2026: [Professor #14](https://github.com/School-of-the-
 [Matrix #229](https://github.com/School-of-the-Ancients/matrix-loading-operator/pull/229)
 and [Matrix #230](https://github.com/School-of-the-Ancients/matrix-loading-operator/pull/230).
 The PR merge records identify the source checkpoint. See the [roadmap](docs/ROADMAP.md)
-for the selected live-voice milestone and the following curriculum pilot.
+for the proposed mini-lesson, progression, curriculum-authoring and optional
+live-voice milestone order.
 
 ## Implemented
 

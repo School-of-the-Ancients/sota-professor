@@ -35,12 +35,14 @@ Validation: 63 server tests, 26 UI tests, type checking and both builds pass. A 
 The parallel visual TODOs remain [Matrix #214](https://github.com/School-of-the-Ancients/matrix-loading-operator/issues/214), appropriate curated teacher avatars with dynamic generation deferred, and [Matrix #215](https://github.com/School-of-the-Ancients/matrix-loading-operator/issues/215), fixing the rigid rest pose and adding natural motion. Riko's expression/emote tags belong to that future adapter; they are not emitted as spoken text.
 
 
-## Selected next milestone: live voice adapter
+## Optional live voice adapter
 
-October 24 owner direction: Matrix/Loading Operator is School's spatial creation
-module, retaining free-form sandbox creation. Add VisionClaw-inspired fast voice
-in front of the existing slower native teaching/Operator backend. This section
-is a design contract, not a claim that live audio has been implemented.
+October 24 priority review: Matrix/Loading Operator is School's spatial creation
+module, retaining free-form sandbox creation. The owner is weighing a complete
+mini-lesson/curriculum loop before premium voice. The [roadmap](ROADMAP.md) proposes
+that order. This contract preserves the VisionClaw-inspired fast voice layer
+in front of the existing native teaching/Operator backend when selected. It is
+not a claim that live audio has been implemented.
 
 | Boundary | Contract |
 | --- | --- |
