@@ -5,6 +5,7 @@ import type { SchoolSession, Teacher, Preferences } from './contracts';
 import { HISTORICAL_TEACHERS } from './personas.mjs';
 import { QuestPreferences, TeacherLibrary, QuestDetail, LearningReview } from './RestorationPanels';
 import { useOperator } from './useOperator';
+import { DeviceLink } from './DeviceLink';
 
 const button = 'rounded-lg bg-amber-200 px-5 py-3 text-sm font-bold text-stone-950 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-40';
 const secondary = 'rounded-lg border border-stone-600 px-4 py-2 text-sm text-stone-200 transition hover:border-amber-200 disabled:opacity-40';
@@ -156,6 +157,7 @@ const SchoolApp: React.FC = () => {
     </header>
     <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 md:grid-cols-[220px_minmax(0,1fr)] md:px-10">
       <aside aria-label="Learning archive" className="space-y-6">
+        <DeviceLink />
         <button className={`${secondary} w-full text-left`} onClick={newQuest} disabled={busy || initializing}>+ Begin a new quest</button>
         <div>
           <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-stone-500">Your academy</h2>

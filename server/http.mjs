@@ -6,6 +6,7 @@ import { ExhibitPreparer } from './exhibit-preparation.mjs';
 import { acceptOperatorResult } from './operator.mjs';
 import { journal, appendEvent, markDelivery } from './conversation.mjs';
 import { acceptTaskResult } from './operator-tasks.mjs';
+import { DeviceLinks } from './device-links.mjs';
 
 const COOKIE = 'sota-local-learner';
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
@@ -25,6 +26,7 @@ async function readBody(req) {
 
 export function createSchoolApi({ store, provider, now = Date.now }) {
   const preparations = new ExhibitPreparer({ store, provider });
+  const deviceLinks = new DeviceLinks(now);
   const rates = new Map();
   let active = 0;
   let globalRate = { start: now(), count: 0 };
@@ -81,6 +83,19 @@ export function createSchoolApi({ store, provider, now = Date.now }) {
           return { write: true, value: teacher };
         }, { readOnly: req.method === 'GET' });
         return send(req.method === 'POST' ? 201 : 200, result);
+      }
+      if (req.method === 'POST' && path === '/api/school/device-link') {
+        const body = await readBody(req);
+        requireValue(body && Object.keys(body).length === 0, 400, 'Device link expects an empty request.');
+        return send(200, deviceLinks.issue(owner));
+      }
+      if (req.method === 'POST' && path === '/api/school/device-link/claim') {
+        const body = await readBody(req);
+        requireValue(body && Object.keys(body).join() === 'code', 400, 'Send one device code.');
+        const linkedOwner = await store.transaction(owner, data => ({ value:
+          deviceLinks.claim(body.code, target => target === owner || (!data.sessions.length && !data.teachers?.length)) }));
+        res.setHeader('Set-Cookie', `${COOKIE}=${linkedOwner}; HttpOnly; SameSite=Strict; Path=/api/school; Max-Age=31536000`);
+        return send(200, { linked: true });
       }
       const match = path.match(new RegExp(`^/api/school/sessions/(${UUID})(?:/(message|quiz|answers|assess|presentation|presentation-edit|exhibit-prepare|operator-result|operator-task-result|conversation|spoken-message|speech-delivery))?$`));
       if (req.method === 'GET' && path === '/api/school/sessions') {

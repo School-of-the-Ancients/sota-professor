@@ -8,6 +8,33 @@ import { SessionStore } from './store.mjs';
 import { createSchoolApi } from './http.mjs';
 import { mockProvider } from './fixtures.mjs';
 
+test('a one-use device code links an empty browser to the same archive without exposing the owner key', async t => {
+  const directory=await mkdtemp(join(tmpdir(),'sota-device-')),api=createSchoolApi({store:new SessionStore(directory),provider:mockProvider()});
+  const server=createServer((req,res)=>void api(req,res));await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  t.after(async()=>{await new Promise(resolve=>server.close(resolve));await api.preparations.idle();await rm(directory,{recursive:true,force:true});});
+  const call=async(path,body,cookie,origin)=>{
+    const response=await fetch(`http://127.0.0.1:${server.address().port}/api/school/${path}`,{
+      method:body?'POST':'GET',headers:{...(cookie?{cookie}:{}),...(origin?{origin}:{}),...(body?{'Content-Type':'application/json'}:{})},
+      ...(body?{body:JSON.stringify(body)}:{})});
+    return {status:response.status,cookie:response.headers.get('set-cookie')?.split(';')[0],value:await response.json()};
+  };
+  const created=await call('sessions',{goal:'Algorithms',mentor:'Ada Lovelace'});
+  const owner=created.cookie;
+  const issued=await call('device-link',{},owner);
+  assert.equal(issued.status,200);assert.deepEqual(Object.keys(issued.value).sort(),['code','expiresAt']);
+  assert(!JSON.stringify(issued.value).includes(owner.split('=')[1]));
+  const guest=await call('sessions');
+  assert.equal((await call(`sessions/${created.value.id}`,undefined,guest.cookie)).status,404);
+  assert.equal((await call('device-link/claim',{code:issued.value.code},guest.cookie,'https://outside.example')).status,403);
+  const linked=await call('device-link/claim',{code:issued.value.code},guest.cookie);
+  assert.equal(linked.cookie,owner);
+  assert.equal((await call('sessions',undefined,linked.cookie)).value[0].id,created.value.id);
+  assert.equal((await call('device-link/claim',{code:issued.value.code},guest.cookie)).status,400);
+  const another=await call('sessions',{goal:'Proofs',mentor:'Ada Lovelace'});
+  const second=await call('device-link',{},owner);
+  assert.equal((await call('device-link/claim',{code:second.value.code},another.cookie)).status,409);
+});
+
 test('spoken journal is durable, idempotent and isolated, and speech failures retain the input',async t=>{
   const directory=await mkdtemp(join(tmpdir(),'sota-voice-')),provider=mockProvider();
   const api=createSchoolApi({store:new SessionStore(directory),provider});
