@@ -10,6 +10,15 @@ release/acceptance evidence. P4/P5 core behavior is implemented; P3 native live
 voice and reviewed curriculum consumption remain separate work. No learner
 history or world reset accompanies source consolidation.
 
+### Learning-loop priority review
+
+The owner reconsidered live voice as the immediate next step. Proposed order in
+`docs/ROADMAP.md`: finite guided mini-lesson (#15), small curriculum/progression
+and achievements (#16/#4), EACL authoring evaluation (#2), optional live voice
+(#3). Free conversation keeps its removed turn caps. This documentation/issue
+review does not deploy code, spend provider credits or change learner records.
+
+
 ### Point & Speak exhibit practice
 
 The owner's subsequent AR request adds a bounded part-identification practice
