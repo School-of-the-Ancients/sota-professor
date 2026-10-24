@@ -3,7 +3,8 @@
 refer to the living document execplan.md
 
 ## Project Structure & Module Organization
-- `index.tsx` boots the SPA and mounts `App.tsx` for routing between conversation, history, and quest flows.
+- `index.tsx` boots the active `src/school/SchoolApp.tsx`; `server/` owns the local native-Codex teaching API and learner records.
+- `App.tsx`, the older route views, Gemini hooks and Supabase helpers are retained legacy source, not the default runtime. Use README.md and CHECKPOINT.md to distinguish current from historical behavior.
 - Feature views and shared widgets live under `components/`; icons stay in `components/icons/`.
 - Route-specific logic sits in `src/routes/`, while cross-cutting utilities stay in `src/lib/`.
 - Hooks covering Supabase auth, Gemini Live audio, and realtime state belong under `hooks/`, and Supabase helpers stay in `supabaseClient.ts`.
@@ -11,7 +12,9 @@ refer to the living document execplan.md
 
 ## Build, Test, and Development Commands
 - `npm install` — install dependencies after cloning.
-- `npm run dev` — launch the Vite dev server on http://localhost:3000.
+- `npm run dev` — launch the loopback Vite app/API on http://127.0.0.1:3000.
+- `npm run build:matrix` — build the companion UI mounted by Matrix.
+- `npm run test:server`, `npm run test:run`, `npm run typecheck:school` — validate the active teaching/API/UI path; native smoke calls are separate opt-in checks.
 - `npm run build` — create a production bundle.
 - `npm run preview` — serve the built bundle for smoke checks.
 - `npm run test` / `npm run test -- --coverage` — run Vitest with React Testing Library, optionally collecting v8 coverage.

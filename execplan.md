@@ -1,4 +1,14 @@
-this is a living document
+# Implementation history and current scope
+
+The active architecture and setup are in [README.md](README.md); current delivered,
+partial and future issue status is in [CHECKPOINT.md](CHECKPOINT.md). This document
+retains dated implementation decisions. An old entry saying a feature was excluded,
+unmerged or unauthorized describes that phase, not the current implementation.
+Current user instructions take precedence. The October 24 review changes only
+documentation and issue status; it does not add a provider, alter archives or restart
+services. Full-duplex voice, reviewed curriculum preload and broad Quest acceptance
+remain open.
+
 
 ### Direct invention requests after historical preview failures
 
