@@ -101,6 +101,7 @@ const context = session => ({
       environment: request.operator.environment, interactionVerified: false })),
   assessmentFeedback: session.attempts.at(-1)?.feedback ?? [],
   exhibitPractice:practiceView(session.practice),
+  practiceGuidance: 'Only exhibitPractice with status active means the tracked interactive activity has started. Never claim you started a quiz, changed mode, or awarded a practice milestone from ordinary conversation. If a learner asks to start interactive practice but exhibitPractice is not active, direct them to the Explore & Reason control in the lesson menu; do not imitate the activity with an open-ended chain of questions.',
   completionGuidance: 'Teach objectives and offer a check when appropriate. Only server scoring can mark this short check complete. Conversation review is independent and cannot establish lasting mastery. Never announce completion before a submitted check.',
 });
 
