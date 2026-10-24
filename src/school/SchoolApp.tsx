@@ -42,9 +42,10 @@ const SchoolApp: React.FC = () => {
     const next = await schoolApi.action(saved, 'operator-result', fields);
     setSession(previous => previous?.id === next.id && next.revision >= previous.revision
       && (next.presentationRevision || 0) >= (previous.presentationRevision || 0) ? next : previous);
-  }, async () => {
-    const saved=currentSession.current;if(!saved||busyRef.current)return;
-    const next=await schoolApi.open(saved.id);
+  }, async (sessionId?:string) => {
+    const saved=currentSession.current;if((!saved&&!sessionId)||busyRef.current)return;
+    const next=await schoolApi.open(sessionId||saved!.id);
+    if(sessionId){setSession(next);window.history.replaceState(null,'',`#session=${next.id}`);return;}
     setSession(previous=>previous?.id===next.id&&next.revision>=previous.revision?next:previous);
   }, async(mode,catalogId)=>{
     const saved=currentSession.current;if(!saved||busyRef.current)throw Error('Finish the current teaching turn before changing appearance.');
@@ -53,6 +54,7 @@ const SchoolApp: React.FC = () => {
     return next;
   });
   const preparingExhibit = session?.presentations?.some(request => request.preparation?.status === 'preparing') || false;
+  const preparingAvatar = ['matching','queued','submitting','running'].includes(session?.appearance?.status || '');
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +75,7 @@ const SchoolApp: React.FC = () => {
 
   useEffect(() => { end.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' }); }, [session?.messages.length]);
   useEffect(() => {
-    if (!session || !preparingExhibit) return;
+    if (!session || (!preparingExhibit && !preparingAvatar)) return;
     setExhibitRefreshError('');
     const id = session.id;
     let stopped = false;
@@ -95,7 +97,7 @@ const SchoolApp: React.FC = () => {
     };
     timer = setTimeout(refresh, 500);
     return () => { stopped = true; clearTimeout(timer); };
-  }, [session?.id, preparingExhibit]);
+  }, [session?.id, preparingExhibit, preparingAvatar]);
 
   const acceptSession = (next: SchoolSession) => {
     setSession(next);

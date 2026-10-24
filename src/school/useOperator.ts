@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { PresentationRequest, SchoolSession } from './contracts';
 
 const allowed = (origin: string) => /^http:\/\/(127\.0\.0\.1|localhost):(8765|5182)$/.test(origin);
-export function useOperator(session: SchoolSession | null, onResult: (fields: object) => Promise<void>, onConversationChanged: () => Promise<void> = async () => {}, onAppearance?: (mode:'auto'|'manual',catalogId?:string)=>Promise<SchoolSession>) {
+export function useOperator(session: SchoolSession | null, onResult: (fields: object) => Promise<void>, onConversationChanged: (sessionId?:string) => Promise<void> = async () => {}, onAppearance?: (mode:'auto'|'manual',catalogId?:string)=>Promise<SchoolSession>) {
   const current = useRef(session), accept = useRef(onResult);
   current.current = session; accept.current = onResult;
   const conversationChanged=useRef(onConversationChanged);conversationChanged.current=onConversationChanged;
@@ -45,6 +45,9 @@ export function useOperator(session: SchoolSession | null, onResult: (fields: ob
         window.parent.postMessage({ type: 'school-operator-ready', channel: message.channel }, event.origin); return;
       }
       if (event.origin !== peer.current?.origin || message.channel !== peer.current.channel) return;
+      if(message.type==='matrix-school-open'&&typeof message.sessionId==='string'&&/^[a-f0-9-]{36}$/.test(message.sessionId)){
+        await conversationChanged.current(message.sessionId);return;
+      }
       if(message.type==='matrix-school-refresh'&&message.sessionId===current.current?.id){await conversationChanged.current();return;}
       if (message.type === 'matrix-professor-catalog') {
         const values=message.catalog?.avatars;

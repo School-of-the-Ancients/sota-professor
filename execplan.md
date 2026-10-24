@@ -1,5 +1,21 @@
 this is a living document
 
+### Reusable professor appearances
+
+The active Matrix-mounted School now prepares an appearance alongside the normal
+lesson introduction. It reuses exact local teacher matches, asks a bounded model
+selection question for other candidates, and requests a durable VRoid asset job
+only when no suitable model exists. The standalone HTTP factory remains inert
+unless appearance preparation is explicitly enabled; test fixtures cannot launch
+live modeling jobs. Manual pins supersede late results. Avatar progress uses a
+separate revision and cannot overwrite lesson turns or quiz state.
+
+Matrix owns VRM export/validation, the local asset library, background Operator
+execution and attaching a ready appearance to the existing teacher object. The
+first spoken question can create a normal School lesson and remains the first
+attributed transcript event. See Matrix's `Docs/Professor-Library.md` for the local
+asset contract. Quest wearer acceptance remains separate from desktop validation.
+
 ### Local Operator action connection
 
 Preserve the full UI and current Leonardo archive. Add explicit structured

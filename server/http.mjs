@@ -9,6 +9,7 @@ import { acceptTaskResult } from './operator-tasks.mjs';
 import { DeviceLinks } from './device-links.mjs';
 import { readEmbodiedScene } from './embodiment.mjs';
 import { avatarCatalog,chooseAppearance } from './appearance.mjs';
+import { AppearancePreparer } from './appearance-preparation.mjs';
 
 const COOKIE = 'sota-local-learner';
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
@@ -26,8 +27,9 @@ async function readBody(req) {
   catch { throw new SchoolError(400, 'Invalid JSON request.'); }
 }
 
-export function createSchoolApi({ store, provider, now = Date.now, readScene = readEmbodiedScene, readAvatarCatalog = avatarCatalog }) {
+export function createSchoolApi({ store, provider, now = Date.now, readScene = readEmbodiedScene, readAvatarCatalog = avatarCatalog, appearanceOptions = {}, prepareAppearances = false }) {
   const preparations = new ExhibitPreparer({ store, provider });
+  const appearances = new AppearancePreparer({store,provider,catalog:readAvatarCatalog,...appearanceOptions});
   const deviceLinks = new DeviceLinks(now);
   const rates = new Map();
   let active = 0;
@@ -41,6 +43,7 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
     };
     let counted = false;
     let ticket = null;
+    let avatarTicket = null;
     try {
       // Local prototype only: defend against DNS rebinding and cross-site subscription use.
       const host = req.headers.host ?? '';
@@ -109,11 +112,12 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
         const body = await readBody(req);
         const session = await store.transaction(owner, async data => {
           requireValue(data.sessions.length < 50, 422, 'This local browser has reached its limit of 50 quests. Export and preserve your learning records before starting another archive.');
-          const created = await createSession(provider, body, data.teachers || [], selected => { ticket = preparations.start(owner, selected); });
+          const created = await createSession(provider, body, data.teachers || [], selected => { ticket = preparations.start(owner, selected); if(prepareAppearances)avatarTicket=appearances.start(owner,selected); });
           data.sessions.push(created);
           return { write: true, value: created };
         });
         preparations.publish(ticket);
+        appearances.publish(avatarTicket);
         return send(201, preparations.snapshot(session, owner));
       }
       requireValue(match, 404, 'School endpoint not found.');
@@ -121,9 +125,13 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
       const session = await store.transaction(owner, async data => {
         const index = data.sessions.findIndex(session => session.id === match[1]);
         requireValue(index >= 0, 404, 'Session not found in this browser archive.');
-        if (req.method === 'GET' && !match[2]) return { value: data.sessions[index] };
+        if (req.method === 'GET' && !match[2]) { if(prepareAppearances)appearances.resume(owner,data.sessions[index]); return { value: data.sessions[index] }; }
         requireValue(req.method === 'POST' && match[2], 405, 'Method not allowed.');
         if(match[2]==='appearance'){
+          if(prepareAppearances&&body?.mode==='auto'&&body.revision===data.sessions[index].revision&&Object.keys(body).length===2){
+            avatarTicket=appearances.start(owner,data.sessions[index]);
+            return {write:true,value:data.sessions[index]};
+          }
           data.sessions[index]=await chooseAppearance(provider,data.sessions[index],body,await readAvatarCatalog());
           return {write:true,value:data.sessions[index]};
         }
@@ -164,13 +172,18 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
         return { write: true, value: updated };
       }, { readOnly: req.method === 'GET', waitForLock: ['conversation','speech-delivery','operator-task-result'].includes(match[2]) });
       preparations.publish(ticket);
+      appearances.publish(avatarTicket);
       return send(200, preparations.snapshot(session, owner));
     } catch (error) {
       preparations.abandon(ticket);
+      appearances.abandon(avatarTicket);
       send(error instanceof SchoolError || error.status ? error.status : 500,
         { error: error instanceof SchoolError || error.status ? error.message : 'The local server could not save this request. Reopen the session to check its state before retrying.' });
     } finally { if (counted) active--; }
   };
+  const waitForExhibits=preparations.idle.bind(preparations);
+  preparations.idle=async()=>{await waitForExhibits();await appearances.idle();};
   handler.preparations = preparations;
+  handler.appearances = appearances;
   return handler;
 }
