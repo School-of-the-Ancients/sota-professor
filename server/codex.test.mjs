@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, existsSync,readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CodexTeachingProvider, DISABLED_FEATURES, SUPPORTED_VERSION, CODE_MODE_DISABLED_NOTICE, subscriptionEnvironment, eventReader, runProcess } from './codex.mjs';
@@ -13,7 +13,7 @@ const events = value => [
   { type: 'item.completed', item: { type: 'agent_message', text: JSON.stringify(value) } },
   { type: 'turn.completed', usage: { input_tokens: 10, output_tokens: 10 } },
 ];
-const help = '--ignore-user-config --ignore-rules --ephemeral --sandbox --json --output-schema --output-last-message --disable --strict-config';
+const help = '--ignore-user-config --ignore-rules --ephemeral --sandbox --json --output-schema --output-last-message --disable --strict-config --image';
 
 function harness(t, overrides = {}) {
   const directory = mkdtempSync(join(tmpdir(), 'sota-provider-test-'));
@@ -28,6 +28,7 @@ function harness(t, overrides = {}) {
     if (args.includes('--help')) return { code: 0, stdout: overrides.help ?? help, stderr: '' };
     if (args[0] === 'login') return { code: overrides.authCode ?? 0, stdout: '', stderr: overrides.auth ?? 'Logged in using ChatGPT' };
     if (overrides.fail) throw new Error('private failure token-test-secret');
+    overrides.onExec?.(args,options);
     const value = overrides.value ?? reply;
     const lines = overrides.events ?? events(value);
     for (const line of lines) options.onLine(typeof line === 'string' ? line : JSON.stringify(line));
@@ -63,6 +64,14 @@ test('subscription provider contract: no API fallback, no inherited keys, isolat
   assert(!existsSync(call.options.cwd));
   assert.deepEqual(Object.keys(call.options.env).sort(), ['APPDATA', 'CODEX_HOME', 'PATH']);
   assert(!JSON.stringify(provider.status()).includes('token-test-secret'));
+});
+
+test('selected view is attached natively and its temporary file is cleaned without enabling tools',async t=>{
+  let path;const bytes=Buffer.from('bounded-test-image');
+  const {provider}=harness(t,{onExec(args){path=args[args.indexOf('--image')+1];assert.deepEqual(readFileSync(path),bytes);
+    assert(args.includes('view_image'));assert(args.includes('read-only'));}});
+  await provider.generate('teach',{}, {image:{bytes}});
+  assert(path);assert.equal(existsSync(path),false);
 });
 
 test('missing login, API-key login and incompatible native capabilities fail closed before a model turn', async t => {

@@ -10,17 +10,18 @@ import { DeviceLinks } from './device-links.mjs';
 import { readEmbodiedScene } from './embodiment.mjs';
 import { avatarCatalog,chooseAppearance } from './appearance.mjs';
 import { AppearancePreparer } from './appearance-preparation.mjs';
+import {checkedVisual} from './surface-visual.mjs';
 
 const COOKIE = 'sota-local-learner';
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
 
-async function readBody(req) {
+async function readBody(req,limit=12000) {
   requireValue(req.headers['content-type']?.split(';')[0] === 'application/json', 415, 'Send JSON requests.');
   let size = 0;
   const parts = [];
   for await (const part of req) {
     size += part.length;
-    requireValue(size <= 12000, 413, 'The request is too large.');
+    requireValue(size <= limit, 413, 'The request is too large.');
     parts.push(part);
   }
   try { return JSON.parse(Buffer.concat(parts).toString('utf8')); }
@@ -121,7 +122,7 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
         return send(201, preparations.snapshot(session, owner));
       }
       requireValue(match, 404, 'School endpoint not found.');
-      const body = req.method === 'POST' ? await readBody(req) : null;
+      const body = req.method === 'POST' ? await readBody(req,path.endsWith('/spoken-message')?720000:12000) : null;
       const session = await store.transaction(owner, async data => {
         const index = data.sessions.findIndex(session => session.id === match[1]);
         requireValue(index >= 0, 404, 'Session not found in this browser archive.');
@@ -149,12 +150,13 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
           return { write: true, value: data.sessions[index] };
         }
         if (match[2] === 'spoken-message') {
-          requireValue(body && Object.keys(body).sort().join() === 'eventId,revision', 400, 'Invalid spoken message.');
+          requireValue(body && ['eventId,revision','eventId,revision,visual'].includes(Object.keys(body).sort().join()), 400, 'Invalid spoken message.');
           const events = journal(data.sessions[index]).events;
           const event = events.find(item => item.id === body.eventId && item.speaker === 'learner' && item.recipient === 'professor');
           requireValue(event, 400, 'Record this learner turn before delivery.');
           if (events.some(item => item.id === `reply:${event.id}`)) return { value: data.sessions[index] };
-          data.sessions[index] = await advanceSession(provider, data.sessions[index], 'message', { revision: body.revision, text: event.text }, event.id, await readScene(match[1]));
+          const scene=await readScene(match[1]),visual=checkedVisual(body.visual,event.surfaceReference,scene);
+          data.sessions[index] = await advanceSession(provider, data.sessions[index], 'message', { revision: body.revision, text: event.text }, event.id, scene,visual);
           return { write: true, value: data.sessions[index] };
         }
         if (match[2] === 'operator-result') {

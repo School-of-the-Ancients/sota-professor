@@ -1,4 +1,5 @@
 // Read-only presentation context. Never grants world execution or visual perception.
+import {surfaceInScene} from './surface-visual.mjs';
 const id = value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/.test(value);
 export function embodiedScene(state, sessionId) {
   const scene = state?.snapshot?.scene;
@@ -38,6 +39,7 @@ export function avatarCue(action, scene) {
   const target = scene?.objects?.find(item => item.objectId === action.objectId);
   if(action.partId&&(!target?.parts?.some(p=>p.partId===action.partId)||!target.partsRevision))return null;
   return target ? { kind: action.kind, objectId: target.objectId, assetId: target.assetId,
+    ...(!action.partId&&scene.selectedSurface?.objectId===target.objectId&&surfaceInScene(scene.selectedSurface,scene)?{surfaceTarget:scene.selectedSurface}:{}),
     ...(action.partId?{partId:action.partId,partsRevision:target.partsRevision}:{}),
     runtimeId: scene.runtimeId, roomId: scene.roomId } : null;
 }
