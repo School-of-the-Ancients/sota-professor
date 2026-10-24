@@ -54,7 +54,9 @@ export class AppearancePreparer {
         catch{await this.wait(250);catalog=await this.catalog();}
         choice=curatedAppearance(catalog,session.mentor);
         if(!choice){
-          const candidates=catalog.filter(item=>item.automaticSelection&&!item.visualTags?.includes('fantasy'));
+          // A different named professor is not a substitute for a missing person.
+          // Reuse their editable source in the authoring job, not their final identity.
+          const candidates=[];
           plan=await this.provider.generate('appearance_plan',{teacher:{id:session.mentor.id,name:session.mentor.name,era:session.mentor.era,expertise:session.mentor.expertise},
             candidates:candidates.map(({catalogId,displayName,visualTags})=>({catalogId,displayName,visualTags}))});
           if(!plan||typeof plan.suitable!=='boolean'||typeof plan.description!=='string')throw Error('Appearance planning returned an invalid result.');

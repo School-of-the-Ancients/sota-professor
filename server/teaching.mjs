@@ -27,7 +27,8 @@ export const exact = (value, keys) => value && typeof value === 'object' && !Arr
 export const strings = (values, min, max, length) => Array.isArray(values) && values.length >= min && values.length <= max && values.every(value => text(value, length));
 
 export function validatePlan(plan) {
-  requireValue(exact(plan, ['title', 'description', 'durationEstimate', 'mentor', 'alternatives', 'objectives']) && text(plan.title, 120)
+  requireValue(exact(plan, ['title', 'description', 'durationEstimate', 'mentor', 'alternatives', 'objectives', ...(Object.hasOwn(plan || {}, 'requestedMentor') ? ['requestedMentor'] : [])])
+    && (!Object.hasOwn(plan || {}, 'requestedMentor') || typeof plan.requestedMentor === 'string' && plan.requestedMentor.length <= 160) && text(plan.title, 120)
     && text(plan.description, 2400) && text(plan.durationEstimate, 300)
     && Array.isArray(plan.alternatives) && plan.alternatives.length >= 1 && plan.alternatives.length <= 3
     && plan.alternatives.every(item => exact(item, ['name', 'reason']) && text(item.name, 160) && text(item.reason, 600))

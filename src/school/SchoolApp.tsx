@@ -202,7 +202,7 @@ const SchoolApp: React.FC = () => {
             <div><label htmlFor="mentor" className="mb-2 block text-sm font-bold text-stone-100">A mentor you have in mind <span className="font-normal text-stone-500">(optional)</span></label>
               <input id="mentor" list="mentors" maxLength={160} value={mentor} onChange={event => setMentor(event.target.value)} disabled={busy} className={input} placeholder="Choose for me, or name a historical figure" />
               <datalist id="mentors">{teachers.map(character => <option key={character.id} value={character.name}>{character.expertise}</option>)}</datalist>
-              <p className="mt-2 text-xs text-stone-500">Select from the library, leave blank for matching, or create a reviewed historical teacher below. All mentors are AI interpretations.</p></div>
+              <p className="mt-2 text-xs text-stone-500">Name a historical figure, or leave blank for the best match. Missing mentors are reviewed and created automatically; their appearance can prepare while you talk. All mentors are AI interpretations.</p></div>
             <QuestPreferences value={preferences} onChange={setPreferences} disabled={busy} />
             <button type="submit" className={button} disabled={busy || initializing || !provider?.configured || !goal.trim()}>{busy ? 'Preparing your quest…' : 'Create my learning quest →'}</button>
             {provider && <div className="space-y-3"><p role="status" className={`text-xs leading-relaxed ${provider.configured ? 'text-stone-400' : 'text-amber-100'}`}>{provider.message}</p>

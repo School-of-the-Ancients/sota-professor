@@ -1,5 +1,21 @@
 # Implementation history and current scope
 
+### Dynamic historical mentors and fresh conversations
+
+Restore the original beta's choose-or-create flow in the current native backend.
+Quest planning recognizes a named/addressed mentor (including clear speech errors),
+and the independent fit review can choose historical people outside the saved
+roster. Missing personas pass the existing identity/profile review and are saved
+atomically with the new learner session; later lessons reuse them. Ambiguous
+identities and inappropriate explicit choices fail clearly instead of silently
+substituting another teacher. The roster is a reuse library, not an eligibility list.
+
+The separate appearance worker reuses an exact teacher match or requests the
+existing Matrix avatar job backed by Docs/Professor-Avatar-Authoring.md. A different
+named professor is no longer an automatic appearance substitute. Persona readiness,
+avatar preparation, validated catalog registration and headset placement remain
+separate states. Free conversation and mini-lesson progress are unchanged.
+
 The active architecture and setup are in [README.md](README.md); current delivered,
 partial and future issue status is in [CHECKPOINT.md](CHECKPOINT.md). This document
 retains dated implementation decisions. An old entry saying a feature was excluded,
