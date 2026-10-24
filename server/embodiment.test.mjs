@@ -9,6 +9,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createSchoolApi} from './http.mjs';
 import {SessionStore} from './store.mjs';
+import {appendEvent,conversationContext} from './conversation.mjs';
 const state={online:true,clientId:'runtime-1',snapshot:{scene:{roomId:'room-1',objects:[
   {objectId:'teacher',assetId:'vrm',professor:{schoolSessionId:'lesson'}},
   {objectId:'exhibit',assetId:'vitruvian'}]},assets:[{assetId:'vitruvian',displayName:'Vitruvian Man'}]}};
@@ -23,6 +24,30 @@ test('scene context is bounded to an online world containing this lesson avatar'
   assert.equal(avatarCue({kind:'point',objectId:'exhibit'},scene).runtimeId,'runtime-1');
   const many=structuredClone(state);many.snapshot.scene.objects.push(...Array.from({length:100},(_,i)=>({objectId:`item-${i}`,assetId:'block'})));
   assert.equal(embodiedScene(many,'lesson').objects.length,64);
+});
+
+test('part cues use exact catalog identity and selected parts reach teaching context',()=>{
+  const input=structuredClone(state);
+  const part={partId:'canvas',label:'Canvas sail',description:'Intended to press against air; no lift simulation.',provenance:'authored'};
+  input.snapshot.assets[0].parts=[part];input.snapshot.assets[0].partsRevision='a'.repeat(64);
+  input.snapshot.selectedPart={objectId:'exhibit',assetId:'vitruvian',partId:'canvas',partsRevision:'a'.repeat(64)};
+  const scene=embodiedScene(input,'lesson');
+  assert.equal(scene.selectedPart.partId,'canvas');assert.equal(scene.objects[0].parts[0].description,part.description);
+  const cue=avatarCue({kind:'point',objectId:'exhibit',partId:'canvas'},scene);
+  assert.equal(cue.partsRevision,'a'.repeat(64));assert.equal(cue.partId,'canvas');
+  assert.equal(avatarCue({kind:'point',objectId:'exhibit',partId:'imaginary'},scene),null);
+  input.snapshot.selectedPart.partsRevision='old';assert.equal(embodiedScene(input,'lesson').selectedPart,undefined);
+});
+
+test('a learner part answer is journaled without changing their words and safely retries',()=>{
+  const session={conversation:{version:1,events:[]}};
+  const event={id:'answer-1',speaker:'learner',recipient:'professor',inputKind:'voice',text:'This is the shaft.',
+    partReference:{objectId:'exhibit',assetId:'model',partId:'shaft',partsRevision:'a'.repeat(64)}};
+  appendEvent(session,event);appendEvent(session,structuredClone(event));
+  assert.equal(session.conversation.events.length,1);
+  assert.equal(conversationContext(session)[0].partReference.partId,'shaft');
+  assert.equal(conversationContext(session)[0].text,'This is the shaft.');
+  assert.throws(()=>appendEvent(session,{...event,id:'invalid',partReference:{...event.partReference,url:'https://example.org'}}),/part reference/);
 });
 
 test('unavailable Matrix cannot block a teaching turn or create false context',async()=>{
