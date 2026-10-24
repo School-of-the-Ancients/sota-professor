@@ -1,5 +1,16 @@
 this is a living document
 
+### Part-aware embodied teaching
+
+The Matrix adapter supplies bounded part IDs, labels and author descriptions for
+registered exhibits. Teaching can point to a specific validated part and explain
+its intended role without treating metadata as physical observation or verified
+simulation. Learner `partReference` is persisted with their spoken/text event so
+“this is the shaft” refers to the part selected with that answer, not a later
+pointer position. Invalid/stale references require clarification. Matrix owns
+geometry, moving targets, highlights/arrows and the authoring API; School retains
+teaching, attribution and learner records. Camera vision is separate work.
+
 ### Reusable professor appearances
 
 The active Matrix-mounted School now prepares an appearance alongside the normal
