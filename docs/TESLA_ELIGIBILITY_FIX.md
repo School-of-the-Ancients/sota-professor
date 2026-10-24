@@ -32,3 +32,17 @@ Only the targeted prompts, eligibility copy and regressions were applied there;
 the later Operator contracts were not silently substituted. The original
 sota-beta origin/history and all saved archives are preserved. No push is made
 to sota-beta. No paid API, billing, access, Matrix or deployment changes occur.
+
+The separately preserved 3108 staging comparison received only the same targeted
+identity/persona policy and eligibility copy; unrelated punctuation/source
+differences were left intact. Both archives were hash checked during the patch.
+The identity/persona policy is byte-for-byte equivalent when imported from the
+private source and both served source copies. Policy SHA256:
+eda2119e3fb89eebcbdfa12dc0f9a1e7fe3d7209463e27f5fe98e809b1d1e1c5.
+
+Final running-app checks: ports 3107 and 3108 each returned HTTP 200, reported
+configured native codex-chatgpt, transformed the updated custom-teacher UI, and
+returned the corrected real-historical-figure validation message for an invalid
+request under a fresh synthetic owner. Those runtime checks invoked no model
+and wrote no archive. UI regressions are automated evidence; the Tesla creation
+was real native-subscription HTTP evidence, not a browser interaction claim.

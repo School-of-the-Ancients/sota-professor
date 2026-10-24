@@ -5,11 +5,14 @@ import { SchoolError, requireValue } from './teaching.mjs';
 
 /** One local server owns these files. Per-owner serialization avoids lost updates. */
 export class SessionStore {
-  constructor(directory) { this.directory = directory; this.locks = new Map(); }
-  async transaction(owner, change, { readOnly = false } = {}) {
+  constructor(directory) { this.directory = directory; this.locks = new Map(); this.waiters = new Map(); }
+  async transaction(owner, change, { readOnly = false, waitForLock = false, background = false } = {}) {
     requireValue(/^[a-f0-9]{64}$/.test(owner), 400, 'Invalid local learner identity.');
-    requireValue(readOnly || !this.locks.has(owner), 409, 'Another request is running for this browser. Wait, then reopen the session.');
-    if (!readOnly) this.locks.set(owner, true);
+    while (!readOnly && this.locks.has(owner)) {
+      requireValue(waitForLock || this.locks.get(owner)?.background, 409, 'Another request is running for this browser. Wait, then reopen the session.');
+      await new Promise(resolve => this.waiters.set(owner, [...(this.waiters.get(owner) || []), resolve]));
+    }
+    if (!readOnly) this.locks.set(owner, { background });
     try {
       const file = join(this.directory, `${owner}.json`);
       let data = { version: 1, sessions: [] };
@@ -34,6 +37,10 @@ export class SessionStore {
         } finally { await unlink(temporary).catch(() => {}); }
       }
       return result.value;
-    } finally { if (!readOnly) this.locks.delete(owner); }
+    } finally { if (!readOnly) {
+      this.locks.delete(owner);
+      const waiters = this.waiters.get(owner) || []; this.waiters.delete(owner);
+      waiters.forEach(resolve => resolve());
+    } }
   }
 }

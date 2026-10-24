@@ -4,6 +4,8 @@ import { schoolApi, type ProviderStatus, type SessionSummary } from './api';
 import type { SchoolSession, Teacher, Preferences } from './contracts';
 import { HISTORICAL_TEACHERS } from './personas.mjs';
 import { QuestPreferences, TeacherLibrary, QuestDetail, LearningReview } from './RestorationPanels';
+import { useOperator } from './useOperator';
+import { DeviceLink } from './DeviceLink';
 
 const button = 'rounded-lg bg-amber-200 px-5 py-3 text-sm font-bold text-stone-950 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-40';
 const secondary = 'rounded-lg border border-stone-600 px-4 py-2 text-sm text-stone-200 transition hover:border-amber-200 disabled:opacity-40';
@@ -29,7 +31,23 @@ const SchoolApp: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState('');
+  const [exhibitRefreshError, setExhibitRefreshError] = useState('');
   const end = useRef<HTMLDivElement>(null);
+  const currentSession = useRef(session);
+  const busyRef = useRef(busy);
+  currentSession.current = session;
+  busyRef.current = busy;
+  const operator = useOperator(session, async fields => {
+    const saved = currentSession.current; if (!saved) return;
+    const next = await schoolApi.action(saved, 'operator-result', fields);
+    setSession(previous => previous?.id === next.id && next.revision >= previous.revision
+      && (next.presentationRevision || 0) >= (previous.presentationRevision || 0) ? next : previous);
+  }, async () => {
+    const saved=currentSession.current;if(!saved||busyRef.current)return;
+    const next=await schoolApi.open(saved.id);
+    setSession(previous=>previous?.id===next.id&&next.revision>=previous.revision?next:previous);
+  });
+  const preparingExhibit = session?.presentations?.some(request => request.preparation?.status === 'preparing') || false;
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +67,30 @@ const SchoolApp: React.FC = () => {
   }, []);
 
   useEffect(() => { end.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' }); }, [session?.messages.length]);
+  useEffect(() => {
+    if (!session || !preparingExhibit) return;
+    setExhibitRefreshError('');
+    const id = session.id;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const refresh = async () => {
+      try {
+        if (!busyRef.current) {
+          const next = await schoolApi.open(id);
+          if (!stopped && !busyRef.current && currentSession.current?.id === id) {
+            setExhibitRefreshError('');
+            setSession(previous => previous?.id === id && next.revision >= previous.revision
+              && (next.presentationRevision || 0) >= (previous.presentationRevision || 0) ? next : previous);
+          }
+        }
+      } catch {
+        if (!stopped && currentSession.current?.id === id) setExhibitRefreshError('Could not refresh preparation status. The last saved draft remains visible; no execution is confirmed.');
+      }
+      if (!stopped) timer = setTimeout(refresh, 1500);
+    };
+    timer = setTimeout(refresh, 500);
+    return () => { stopped = true; clearTimeout(timer); };
+  }, [session?.id, preparingExhibit]);
 
   const acceptSession = (next: SchoolSession) => {
     setSession(next);
@@ -59,14 +101,16 @@ const SchoolApp: React.FC = () => {
   };
 
   const run = async (operation: () => Promise<SchoolSession>, clearDraft = false) => {
-    if (busy) return;
+    if (busyRef.current) return false;
+    busyRef.current = true;
     setBusy(true);
     setError('');
     try {
       acceptSession(await operation());
       if (clearDraft) setDraft('');
-    } catch (error) { setError(error instanceof Error ? error.message : 'The request failed. Reopen the session to check what was saved.'); }
-    finally { setBusy(false); }
+      return true;
+    } catch (error) { setError(error instanceof Error ? error.message : 'The request failed. Reopen the session to check what was saved.'); return false; }
+    finally { busyRef.current = false; setBusy(false); }
   };
 
   const sendMessage = (text: string) => session && text.trim() && run(() => schoolApi.action(session, 'message', { text }), true);
@@ -113,6 +157,7 @@ const SchoolApp: React.FC = () => {
     </header>
     <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 md:grid-cols-[220px_minmax(0,1fr)] md:px-10">
       <aside aria-label="Learning archive" className="space-y-6">
+        <DeviceLink />
         <button className={`${secondary} w-full text-left`} onClick={newQuest} disabled={busy || initializing}>+ Begin a new quest</button>
         <div>
           <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-stone-500">Your academy</h2>
@@ -136,6 +181,7 @@ const SchoolApp: React.FC = () => {
           {session && <button className={`${secondary} mt-3`} disabled={busy} onClick={() => void run(() => schoolApi.open(session.id))}>Reopen saved session</button>}
         </div>}
         {!session ? <div className="space-y-8">
+          {operator.connected && <p role="status" className="text-sm text-teal-200">{operator.notice}</p>}
           <section className="border-b border-stone-700 pb-8 pt-4">
             <p className="mb-4 text-xs uppercase tracking-[0.25em] text-amber-200">Curiosity becomes a course</p>
             <h1 className="max-w-2xl font-serif text-4xl leading-tight text-stone-100 md:text-5xl">What would you like<br />to understand?</h1>
@@ -169,6 +215,13 @@ const SchoolApp: React.FC = () => {
               <button className={secondary} onClick={download}>Export learning record</button></div>
             <h1 className="font-serif text-3xl text-stone-100">{session.title}</h1>
             <p className="mt-3 text-sm text-stone-400">Your goal: {session.goal}</p>
+            {operator.connected && <div className="mt-4 flex flex-wrap items-center gap-3">
+              <label className="text-sm">Professor appearance <select aria-label="Professor appearance" className={input} value={operator.avatarId} onChange={event=>operator.setAvatarId(event.target.value)}>
+                {operator.avatars.map(avatar=><option key={avatar.catalogId} value={avatar.catalogId}>{avatar.displayName}</option>)}
+              </select></label>
+              <button className={secondary} disabled={busy||operator.placing||!operator.avatars.length} onClick={operator.placeProfessor}>{operator.placing?'Placing professor…':'Place professor in Matrix'}</button>
+              <p className="text-xs text-stone-400">A stylized representation; appearance does not change your teacher or lesson.</p>
+            </div>}
             <div className="mt-5 rounded-xl bg-stone-800/60 p-4"><h2 className="font-serif text-xl text-amber-100">{session.mentor.name}</h2>
               <p className="mt-1 text-xs text-stone-400">{session.mentor.era} · {session.mentor.expertise} · AI interpretation</p>
               <p className="mt-2 text-sm leading-relaxed text-stone-300">{session.mentor.rationale}</p></div>
@@ -177,9 +230,24 @@ const SchoolApp: React.FC = () => {
               <ol className="mt-2 list-decimal space-y-1 pl-5 text-stone-400">{session.objectives.map(objective => <li key={objective.id}>{objective.label}</li>)}</ol></details>
           </section>
           <section aria-label="Teaching conversation" className="space-y-5">
+            {session.operatorTasks?.length ? <section aria-label="Delegated Operator tasks" className="rounded-xl border border-teal-800 p-4">
+              <h3>Operator tasks · continue the conversation while they run</h3>
+              {session.operatorTasks.map(task=><p key={task.id} className="mt-2 text-sm">{task.title} — {task.status}</p>)}
+            </section> : null}
+            {session.conversation && <details className="rounded-xl border border-stone-700 p-4">
+              <summary>Shared Professor / Operator transcript</summary>
+              <p className="mt-2 text-xs text-stone-400">Direct Operator commands are context, not evidence of mastery. Interrupted speech may not have been heard in full.</p>
+              {session.conversation.events.slice(-100).map(event=><article key={event.id} className="mt-3 whitespace-pre-wrap text-sm">
+                <strong>{event.speaker} → {event.recipient}{event.speaker==='professor'?` · ${event.delivery}`:''}</strong><p>{event.text}</p>
+              </article>)}
+            </details>}
             {session.messages.map((message, index) => <article key={index} className={`rounded-xl p-5 ${message.role === 'user' ? 'ml-6 border border-stone-700 bg-stone-800/40' : 'border-l-2 border-amber-200/50 bg-stone-900/50'}`}>
               <h3 className={`mb-2 text-xs font-bold uppercase tracking-widest ${message.role === 'user' ? 'text-stone-400' : 'text-amber-200'}`}>{message.role === 'user' ? 'You' : session.mentor.name}</h3>
               <p className="whitespace-pre-wrap text-sm leading-7 text-stone-200">{message.text}</p>
+            </article>)}
+            {(session.presentations || []).filter(request => request.operator?.requestVersion === (request.version || 1)).map(request => <article key={`operator-${request.id}`} aria-label="Operator conversation update" className="rounded-xl border border-teal-800 bg-teal-950/20 p-5">
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-teal-200">Operator · {request.title}</h3>
+              <p className="text-sm leading-7">{request.operator!.summary}</p>
             </article>)}
             <div ref={end} />
           </section>
@@ -216,10 +284,11 @@ const SchoolApp: React.FC = () => {
             {session.status !== 'complete' && <div className="flex flex-wrap gap-2" aria-label="Suggested replies">{session.suggestions.map((suggestion, index) => <button key={index} className={`${secondary} text-left text-xs`} disabled={busy} onClick={() => setDraft(suggestion)}>{suggestion}</button>)}</div>}
             <p className="text-xs text-stone-500">Saved after each successful turn. Your full conversation is restored for your mentor when you return. No microphone required.</p>
           </section>}
-          <LearningReview session={session} disabled={busy || !provider?.configured} onAction={(action, fields = {}) => void run(() => schoolApi.action(session, action, fields))} />
+          {exhibitRefreshError && preparingExhibit && <p role="status" className="text-sm text-amber-100">{exhibitRefreshError}</p>}
+          <LearningReview session={session} disabled={busy || !provider?.configured} operator={operator} onAction={(action, fields = {}) => run(() => schoolApi.action(session, action, fields))} />
           {busy && <p role="status" className="text-sm text-amber-100">Working on this request. Your saved session remains available.</p>}
         </div>}
-        <footer className="mt-10 border-t border-stone-800 pt-5 text-xs leading-relaxed text-stone-500">Historically inspired teaching, with room for questions and correction. AI can make mistakes; verify consequential claims. Teaching uses native Codex with your ChatGPT sign-in on this computer and sends your goal and saved lesson context to OpenAI. Your plan, model and workspace limits apply. Keep the local School server running; this is a personal local app. No API-key fallback, ChatGPT history import, images or live voice are enabled.</footer>
+        <footer className="mt-10 border-t border-stone-800 pt-5 text-xs leading-relaxed text-stone-500">Historically inspired teaching, with room for questions and correction. AI can make mistakes; verify consequential claims. Teaching uses native Codex with your ChatGPT sign-in on this computer and sends your goal and saved lesson context to OpenAI. Your plan, model and workspace limits apply. Keep the local School server running; this is a personal local app. No API-key fallback or ChatGPT history import. Direct PC tools and native live voice remain disabled. Requested Matrix tasks run through the existing Operator. Explicit Matrix image/background requests use its advertised native Codex capability; optional spatial creation stays in Matrix controls.</footer>
       </main>
     </div>
   </div>;

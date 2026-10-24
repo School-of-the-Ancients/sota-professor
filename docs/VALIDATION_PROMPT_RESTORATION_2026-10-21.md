@@ -1,5 +1,11 @@
 # Prompt restoration validation — October 21, 2026
 
+Latest eligibility correction and current checks are recorded in
+`TESLA_ELIGIBILITY_FIX.md`: 35 server tests, 16 frontend tests, strict typecheck
+and build pass. The current main runtime includes fix `db3ed48`, and both
+comparison apps share the corrected historical-person policy. The restoration
+and handoff evidence below describes the earlier checkpoints chronologically.
+
 Restoration was developed in local `sota-beta-openai` on
 `feat/openai-text-school` and committed as `6eeb566`. A clean source checkpoint
 is now pushed privately to `School-of-the-Ancients/sota-professor`, branch

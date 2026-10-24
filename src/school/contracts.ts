@@ -32,6 +32,8 @@ export interface Attempt {
   feedback: { objectiveId: string; prompt: string; correct: boolean; explanation: string }[];
 }
 export interface SchoolSession {
+  operatorTasks?: {id:string;title:string;instruction:string;objectiveId:string;status:string;sourceReplyId:string;execution:null|{result:string;message:string;status:string}}[];
+  conversation?: { version: number; events: { id:string; speaker:string; recipient:string; text:string; inputKind:string; delivery:string; createdAt:string }[] };
   id: string;
   revision: number;
   createdAt: string;
@@ -52,10 +54,11 @@ export interface SchoolSession {
   mentorReview?: { reason: string; caveats: string[]; alternatives: { mentorId: string; name: string; reason: string }[] };
   assessments?: ConversationAssessment[];
   presentations?: PresentationRequest[];
+  presentationRevision?: number;
 }
 
-// Future presentation adapters consume inert requests. Teaching has no authoring tools.
-// No adapter, scene generation, or execution is enabled in phase one.
+// Teaching emits inert requests. The local Operator bridge submits only explicit
+// image/background actions; spatial execution retains Matrix's existing controls.
 export interface PresentationRequest {
   id: string;
   kind: 'location' | 'lab' | 'artifact';
@@ -69,6 +72,21 @@ export interface PresentationRequest {
   learningIntent?: string;
   interaction?: InteractionRequirement;
   receipt?: PresentationReceipt;
+  origin?: 'initial';
+  version?: number;
+  promptEdited?: boolean;
+  promptSource?: 'draft' | 'codex' | 'user';
+  preparation?: { status: 'preparing' | 'ready' | 'error'; token: string; fingerprint: string };
+  operator?: OperatorResult;
+}
+export interface OperatorResult {
+  observedAt?: string;
+  adapterId: string; actionId: string; matrixSessionId: string; requestVersion: number; lessonRevision: number;
+  status: 'queued' | 'generating' | 'failed' | 'cancelled' | 'image_ready' | 'object_loaded' | 'setting_applied';
+  kind: PresentationRequest['kind']; conceptId: string; conceptVersion: number; selected: boolean; summary: string;
+  image: { sha256: string; previewUrl: string } | null;
+  build: { status: string; runtimeId?: string; roomId?: string; objectIds?: string[]; receipts?: string[] } | null;
+  environment: { requestId: string; roomId: string; assetId: string; sha256: string } | null;
 }
 export type InteractionCapability = 'move' | 'rotate' | 'select' | 'measure' | 'simulate';
 export interface InteractionRequirement {
