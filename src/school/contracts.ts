@@ -32,7 +32,8 @@ export interface Attempt {
   feedback: { objectiveId: string; prompt: string; correct: boolean; explanation: string }[];
 }
 export interface SchoolSession {
-  appearance?: {mode:'auto'|'manual';catalogId:string;reason:string;method:string;representation:string};
+  appearance?: {mode:'auto'|'manual';catalogId:string;reason:string;method:string;representation:string;status?:string;jobId?:string;token?:string};
+  appearanceRevision?: number;
   operatorTasks?: {id:string;title:string;instruction:string;objectiveId:string;status:string;sourceReplyId:string;execution:null|{result:string;message:string;status:string}}[];
   conversation?: { version: number; events: { id:string; speaker:string; recipient:string; text:string; inputKind:string; delivery:string; createdAt:string }[] };
   id: string;
