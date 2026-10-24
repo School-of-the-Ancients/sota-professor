@@ -21,6 +21,8 @@ selections advance. Hints, repeat and stop are explicit voice commands. Formal
 quiz answers, scores and completion are preserved. Public responses omit the
 internal part-answer plan. Device readability/input/voice acceptance stays
 separate from synthetic HTTP and controller evidence.
+Explanation and question are separate saved speech events. Matrix permits
+labels during explanation and hides answer-revealing overlays for the question.
 
 
 ### Direct invention requests after historical preview failures

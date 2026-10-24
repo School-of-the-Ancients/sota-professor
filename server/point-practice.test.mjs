@@ -21,10 +21,10 @@ function answer(s,partId,requestId='answer',source=scene()){
 }
 test('teach then point, wrong answer, retry and next round preserve formal assessment and source scene',()=>{
   const original=session(),s=start(original),before=structuredClone(scene());
-  assert.equal(s.practice.rounds[0].partId,'handle');assert.match(s.conversation.events.at(-1).text,/handle supplies input.*Point to the Handle/);
+  assert.equal(s.practice.rounds[0].partId,'handle');assert.match(s.conversation.events.at(-2).text,/handle supplies input/);assert.match(s.conversation.events.at(-1).text,/Point to the Handle/);
   const wrong=answer(s,'wing');assert.equal(wrong.practice.found.length,0);assert.equal(wrong.practice.index,0);
   const correct=answer(wrong,'handle','retry');assert.equal(correct.practice.index,1);assert.equal(correct.practice.found.length,1);
-  assert.match(correct.conversation.events.at(-1).text,/shaft transfers rotation/);
+  assert.match(correct.conversation.events.at(-2).text,/shaft transfers rotation/);
   const duplicate=advancePointPractice(correct,{requestId:'retry',action:'answer',revision:0},scene());assert.equal(duplicate,correct);
   const done=answer(answer(correct,'shaft','second'),'wing','third');assert.equal(done.practice.status,'complete');
   assert.equal(done.practice.streak,3);assert.equal(done.practice.found.length,3);

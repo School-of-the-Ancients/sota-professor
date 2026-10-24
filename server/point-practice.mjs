@@ -18,7 +18,7 @@ export function publicPractice(value){
     index:value.index,total:value.rounds.length,found:value.found.length,streak:value.streak,hints:value.hints,
     roundId:value.status==='active'?value.rounds[value.index].id:null,
     question:value.status==='active'?question(value):value.status==='complete'?'All parts found. Practice complete.':'Practice stopped.',
-    feedback:value.feedback,replyId:value.replyId};
+    feedback:value.feedback,replyId:value.replyId,lectureReplyId:value.lectureReplyId||null};
 }
 export function advancePointPractice(existing,input,scene){
   requireValue(input&&['start','answer','repeat','hint','stop'].includes(input.action),'Unknown practice action.',400);
@@ -61,7 +61,7 @@ export function advancePointPractice(existing,input,scene){
       practice.runtimeId=scene.runtimeId;
       if(input.action==='repeat')speech=explain(practice);
       else if(input.action==='hint'){
-        practice.hints++;speech=`Hint: find the ${practice.rounds[practice.index].label}. ${practice.rounds[practice.index].description} ${question(practice)}`;
+        practice.hints++;speech=`Hint: find the ${practice.rounds[practice.index].label}. ${practice.rounds[practice.index].description} Now, ${question(practice)}`;
       }else{
         const reference=input.partReference;
         const selected=scene.objects.find(o=>o.objectId===reference?.objectId&&o.assetId===reference?.assetId&&o.partsRevision===reference?.partsRevision);
@@ -83,6 +83,13 @@ export function advancePointPractice(existing,input,scene){
     }
   }
   practice.requests=[...practice.requests,input.requestId].slice(-100);
+  practice.lectureReplyId=null;
+  const split=practice.status==='active'?speech.lastIndexOf(`Now, ${question(practice)}`):-1;
+  if(split>=0){
+    const lecture=appendEvent(session,{id:`practice-lecture:${input.requestId}`,speaker:'professor',recipient:'learner',inputKind:'text',
+      text:speech.slice(0,split).trim(),worldId:practice.roomId},true);
+    practice.lectureReplyId=lecture.id;speech=question(practice);
+  }
   const event=appendEvent(session,{id:`practice-reply:${input.requestId}`,speaker:'professor',recipient:'learner',inputKind:'text',
     text:speech,worldId:practice.roomId},true);
   practice.replyId=event.id;
