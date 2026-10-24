@@ -114,7 +114,8 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
         const body = await readBody(req);
         const session = await store.transaction(owner, async data => {
           requireValue(data.sessions.length < 50, 422, 'This local browser has reached its limit of 50 quests. Export and preserve your learning records before starting another archive.');
-          const created = await createSession(provider, body, data.teachers || [], selected => { ticket = preparations.start(owner, selected); if(prepareAppearances)avatarTicket=appearances.start(owner,selected); });
+          data.teachers ||= [];
+          const created = await createSession(provider, body, data.teachers, selected => { ticket = preparations.start(owner, selected); if(prepareAppearances)avatarTicket=appearances.start(owner,selected); });
           data.sessions.push(created);
           return { write: true, value: created };
         });

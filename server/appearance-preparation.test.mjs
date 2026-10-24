@@ -68,3 +68,14 @@ test('unavailable avatar services leave the lesson and transcript usable',async 
  await f.worker.idle();const session=await f.read();
  assert.equal(session.appearance.status,'unavailable');assert.equal(session.revision,7);assert.equal(session.messages[0].text,'Keep teaching');
 });
+
+test('a different historical figure is never silently reused for a missing mentor',async t=>{
+ let submitted=0,candidates;
+ const f=await setup(t,{catalog:async()=>[{catalogId:'einstein',automaticSelection:true,teacherMatches:['einstein']}],
+  provider:{generate:async(_kind,input)=>{candidates=input.candidates;return {suitable:false,catalogId:'',description:'Leonardo with silver hair and Renaissance clothing'};}},
+  submit:async()=>{submitted++;return {id:'new-job',status:'failed',message:'Test authoring failure'};}});
+ await f.worker.idle();const session=await f.read();
+ assert.deepEqual(candidates,[]);assert.equal(submitted,1);
+ assert.notEqual(session.appearance.catalogId,'einstein');assert.equal(session.appearance.status,'failed');
+ assert.equal(session.mentor.name,'Leonardo');
+});
