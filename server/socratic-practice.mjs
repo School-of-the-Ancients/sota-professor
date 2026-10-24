@@ -62,6 +62,7 @@ export function publicSocraticPractice(p){
 // Existing recognition practice remains resumable. Starting a new activity opts
 // into dialogue and archives the previous activity without changing its scores.
 export async function advancePractice(provider,existing,input,scene){
+  if (input?.action === 'start') requireValue(!(existing.miniLesson?.mode === 'guided' && existing.miniLesson?.status === 'active'), 'Pause the mini-lesson before starting exhibit practice.');
   if(input?.action!=='start'&&existing.practice?.mode!=='socratic')return advancePointPractice(existing,input,scene);
   requireValue(input&&['start','answer','respond','repeat','hint','stop'].includes(input.action),'Unknown practice action.',400);
   requireValue(Object.keys(input).every(k=>['revision','action','requestId','objectId','practiceId','roundId','partReference','text','inputKind','eventId'].includes(k)),'Unexpected practice input.',400);

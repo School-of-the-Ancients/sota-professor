@@ -104,7 +104,7 @@ export function createSchoolApi({ store, provider, now = Date.now, readScene = r
         res.setHeader('Set-Cookie', `${COOKIE}=${linkedOwner}; HttpOnly; SameSite=Strict; Path=/api/school; Max-Age=31536000`);
         return send(200, { linked: true });
       }
-      const match = path.match(new RegExp(`^/api/school/sessions/(${UUID})(?:/(message|quiz|answers|assess|practice|presentation|presentation-edit|exhibit-prepare|operator-result|operator-task-result|conversation|spoken-message|speech-delivery|appearance))?$`));
+      const match = path.match(new RegExp(`^/api/school/sessions/(${UUID})(?:/(message|quiz|answers|assess|practice|mini-lesson|presentation|presentation-edit|exhibit-prepare|operator-result|operator-task-result|conversation|spoken-message|speech-delivery|appearance))?$`));
       if (req.method === 'GET' && path === '/api/school/sessions') {
         const list = await store.transaction(owner, data => ({ value: data.sessions.map(session => ({ id: session.id, title: session.title,
           mentorName: session.mentor.name, status: session.status, updatedAt: session.updatedAt })).reverse() }), { readOnly: true });

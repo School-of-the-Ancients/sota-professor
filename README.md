@@ -66,6 +66,27 @@ For a fresh demonstration, archive/start a new Matrix world and separately start
 a new idle Operator conversation, then reload the browser. Old School lessons
 stay in History. A new world alone is not a new Operator conversation.
 
+## Guided mini-lessons
+
+Open a lesson, then choose **Start mini-lesson** in School or **Lesson → Mini
+lesson** in the Matrix workspace. One existing objective becomes a short
+explanation, activity and reflection, followed by a saved recap and next step.
+Use **Try the activity**, then answer normally by text or Professor microphone.
+Two unsuccessful attempts at a step lead to a review recap rather than an
+endless question loop. **Review this idea** starts another bounded attempt;
+**Next mini-lesson** uses the next uncovered objective.
+
+**Pause and talk freely** keeps the exact activity for later; **Resume** returns
+to it. **Finish with a recap** records a review need without inventing success.
+Free conversation stays available and has no fixed turn cap. Mini-lesson
+completion does not automatically pass the formal quiz. Earlier formal quiz
+attempts are retained, with recent questions used for the next check.
+
+In AR, explicit commands such as “start a mini lesson”, “continue the mini
+lesson”, “pause the mini lesson” and “finish the mini lesson” mirror the controls.
+Existing exhibit practice, quiz label masking, selection cues and Operator tasks
+remain separate. Finish/pause other active practice before starting a mini-lesson.
+
 ## Data and access
 
 School stores plaintext learner records in ignored `.school-data/`, scoped by a
