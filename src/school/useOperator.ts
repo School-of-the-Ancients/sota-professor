@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { PresentationRequest, SchoolSession } from './contracts';
 
 const allowed = (origin: string) => /^http:\/\/(127\.0\.0\.1|localhost):(8765|5182)$/.test(origin);
-export function useOperator(session: SchoolSession | null, onResult: (fields: object) => Promise<void>, onConversationChanged: () => Promise<void> = async () => {}) {
+export function useOperator(session: SchoolSession | null, onResult: (fields: object) => Promise<void>, onConversationChanged: () => Promise<void> = async () => {}, onAppearance?: (mode:'auto'|'manual',catalogId?:string)=>Promise<SchoolSession>) {
   const current = useRef(session), accept = useRef(onResult);
   current.current = session; accept.current = onResult;
   const conversationChanged=useRef(onConversationChanged);conversationChanged.current=onConversationChanged;
@@ -10,6 +10,20 @@ export function useOperator(session: SchoolSession | null, onResult: (fields: ob
   const [connected, setConnected] = useState(false), [notice, setNotice] = useState('Open Professor inside Matrix to connect Operator.');
   const [avatars, setAvatars] = useState<{catalogId: string; displayName: string}[]>([]);
   const [avatarId, setAvatarId] = useState('generic-professor');
+  const [matching,setMatching]=useState(false);
+  const matchingRef=useRef(false);
+  const appearanceAction=useRef(onAppearance);appearanceAction.current=onAppearance;
+  const attemptedMatches=useRef(new Set<string>());
+  const selectAppearance=async(value:string)=>{
+    const saved=current.current;if(!saved||matchingRef.current)return;
+    if(!appearanceAction.current){setAvatarId(value);return;}
+    matchingRef.current=true;setMatching(true);
+    try{
+      const next=await appearanceAction.current(value==='auto'?'auto':'manual',value==='auto'?undefined:value);
+      if(current.current?.id===saved.id&&next.appearance)setAvatarId(next.appearance.catalogId);
+    }catch(error){if(current.current?.id===saved.id)setNotice(error instanceof Error?error.message:'Could not select an appearance.');}
+    finally{matchingRef.current=false;setMatching(false);}
+  };
   const [placing, setPlacing] = useState(false);
   const placingRef = useRef(false);
   const placed = useRef(new Map<string,string>());
@@ -40,7 +54,7 @@ export function useOperator(session: SchoolSession | null, onResult: (fields: ob
           placed.current.clear();
           if(Array.isArray(message.placements)&&message.placements.length<=256)for(const item of message.placements)
             if(typeof item?.schoolSessionId==='string'&&entries.some((entry: {catalogId:string})=>entry.catalogId===item.catalogId))placed.current.set(item.schoolSessionId,item.catalogId);
-          setAvatarId(placed.current.get(current.current?.id||'')||'generic-professor');
+          setAvatarId(current.current?.appearance?.catalogId||placed.current.get(current.current?.id||'')||'generic-professor');
         }
         return;
       }
@@ -70,12 +84,17 @@ export function useOperator(session: SchoolSession | null, onResult: (fields: ob
   useEffect(() => {
     buildPending.current = false; setBuilding(null);
     placingRef.current=false;setPlacing(false);
-    setAvatarId(placed.current.get(session?.id||'')||'generic-professor');
+    setAvatarId(session?.appearance?.catalogId||placed.current.get(session?.id||'')||'generic-professor');
     if (!connected || !session) return;
     for (const request of session.presentations || []) if (request.operator?.requestVersion === (request.version || 1))
       send('school-operator-watch', { schoolSessionId: session.id, requestId: request.id,
         requestVersion: request.version || 1, sessionId: request.operator.matrixSessionId, actionId: request.operator.actionId });
   }, [connected, session?.id]);
+  useEffect(()=>{
+    if(session?.appearance){setAvatarId(session.appearance.catalogId);return;}
+    if(!session||!connected||!avatars.length||matching||!appearanceAction.current||attemptedMatches.current.has(session.id))return;
+    attemptedMatches.current.add(session.id);void selectAppearance('auto');
+  },[session?.id,session?.appearance?.catalogId,connected,avatars.length,matching]);
   useEffect(()=>{
     if(connected)send('school-professor-session',{sessionId:session?.id||null});
   },[connected,session?.id,session?.revision]);
@@ -87,8 +106,8 @@ export function useOperator(session: SchoolSession | null, onResult: (fields: ob
     }, 15000);
     return () => window.clearTimeout(timer);
   }, [placing]);
-  return { connected, notice, building, avatars, avatarId, setAvatarId, placing,
-    placeProfessor:()=>{const saved=current.current;if(!saved||!peer.current||placingRef.current||!avatars.some(avatar=>avatar.catalogId===avatarId))return;placingRef.current=true;setPlacing(true);
+  return { connected, notice, building, avatars, avatarId, setAvatarId, selectAppearance, matching, hasProfessor:placed.current.has(session?.id||''), placing,
+    placeProfessor:()=>{const saved=current.current;if(!saved||!peer.current||placingRef.current||matching||!avatars.some(avatar=>avatar.catalogId===avatarId))return;placingRef.current=true;setPlacing(true);
       pendingAvatar.current=avatarId;
       send('school-professor-place',{schoolSessionId:saved.id,teacherId:saved.mentor.id||'custom-teacher',teacherName:saved.mentor.name,catalogId:avatarId});},
     request: (request: PresentationRequest) => {

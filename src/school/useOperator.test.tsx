@@ -30,6 +30,19 @@ it('restores the current world appearance when reopening a saved lesson',()=>{
     placements:[{schoolSessionId:session.id,catalogId:'web:riko:123'}]}));
   expect(view.result.current.avatarId).toBe('web:riko:123');
 });
+
+it('matches an unconfigured lesson once and restores a persisted manual pin',async()=>{
+  const saved={...session,mentor:{name:'Leonardo'}} as SchoolSession;
+  const choose=vi.fn().mockResolvedValue({...saved,revision:2,appearance:{mode:'auto',catalogId:'scholar',reason:'Renaissance clothing'}});
+  const view=renderHook(({value})=>useOperator(value,vi.fn(),async()=>{},choose),{initialProps:{value:saved}});
+  act(()=>message({type:'matrix-operator-hello',channel}));
+  act(()=>message({type:'matrix-professor-catalog',channel,catalog:{avatars:[{catalogId:'scholar',displayName:'Scholar'}]}}));
+  await waitFor(()=>expect(view.result.current.avatarId).toBe('scholar'));
+  expect(choose).toHaveBeenCalledTimes(1);expect(choose).toHaveBeenCalledWith('auto',undefined);
+  view.rerender({value:{...saved,appearance:{mode:'manual',catalogId:'riko',reason:'Pinned',method:'manual',representation:'approximate'}}});
+  await waitFor(()=>expect(view.result.current.avatarId).toBe('riko'));
+  expect(choose).toHaveBeenCalledTimes(1);
+});
 it('accepts only the expected parent/origin handshake and sends bounded intent, not tools or credentials',()=>{
   const accept=vi.fn().mockResolvedValue(undefined),view=renderHook(()=>useOperator(session,accept));
   act(()=>message({type:'matrix-operator-hello',channel},'https://outside.example'));
