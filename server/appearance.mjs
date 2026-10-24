@@ -1,6 +1,15 @@
 import {SchoolError,requireValue,exact,text} from './teaching.mjs';
 const normalize=value=>String(value||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 
+export function curatedAppearance(catalog,teacher){
+  const names=[normalize(teacher.id),normalize(teacher.name)];
+  const matches=catalog.filter(item=>item.automaticSelection===true&&
+    !item.visualTags?.includes('fantasy')&&item.teacherMatches?.some(name=>names.includes(normalize(name))));
+  // Explicit local upgrades take precedence over the bundled fallback cast.
+  // Existing lesson appearances and manual pins are not rematched here.
+  return matches.find(item=>item.libraryOwned===false)||matches[0];
+}
+
 export async function avatarCatalog(fetcher=fetch){
   const headers={Accept:'application/json'};
   if(process.env.SANDBOX_TOKEN)headers.Authorization=`Bearer ${process.env.SANDBOX_TOKEN}`;
@@ -25,8 +34,7 @@ export async function chooseAppearance(provider,session,input,catalog){
   }else{
     const candidates=catalog.filter(item=>item.automaticSelection===true&&!item.visualTags?.includes('fantasy'));
     requireValue(candidates.length>0,409,'No automatic appearances are available. Choose a model manually.');
-    const key=normalize(session.mentor.name),teacherId=normalize(session.mentor.id);
-    choice=candidates.find(item=>item.teacherMatches?.some(match=>[key,teacherId].includes(normalize(match))));
+    choice=curatedAppearance(candidates,session.mentor);
     if(choice){reason=`Curated ${choice.displayName.toLowerCase()} representation for ${session.mentor.name}.`;method='curated';}
     else{
       try{

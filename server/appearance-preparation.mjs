@@ -1,7 +1,6 @@
 import {randomUUID} from 'node:crypto';
-import {avatarCatalog} from './appearance.mjs';
+import {avatarCatalog,curatedAppearance} from './appearance.mjs';
 
-const normalized=value=>String(value).toLowerCase().replace(/[^a-z0-9]/g,'');
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function matrix(path,body){
   const headers={Accept:'application/json',Origin:'http://127.0.0.1:8765'};
@@ -53,8 +52,7 @@ export class AppearancePreparer {
       if(!session.appearance.jobId){
         try{catalog=await this.catalog();}
         catch{await this.wait(250);catalog=await this.catalog();}
-        const names=[normalized(session.mentor.id),normalized(session.mentor.name)];
-        choice=catalog.find(item=>item.automaticSelection&&item.teacherMatches?.some(name=>names.includes(normalized(name))));
+        choice=curatedAppearance(catalog,session.mentor);
         if(!choice){
           const candidates=catalog.filter(item=>item.automaticSelection&&!item.visualTags?.includes('fantasy'));
           plan=await this.provider.generate('appearance_plan',{teacher:{id:session.mentor.id,name:session.mentor.name,era:session.mentor.era,expertise:session.mentor.expertise},
