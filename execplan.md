@@ -10,6 +10,19 @@ release/acceptance evidence. P4/P5 core behavior is implemented; P3 native live
 voice and reviewed curriculum consumption remain separate work. No learner
 history or world reset accompanies source consolidation.
 
+### Guided mini-lessons (#15)
+
+The owner selected finite mini-lessons while preserving free conversation and
+current AR. The optional server-owned activity uses one existing objective,
+keeps learn/try/reflect/recap state, saves quoted learner evidence and ends with
+complete or needs-review. Two unsuccessful attempts at a step produce a review
+recap. Pause/resume/free exploration retain progress; mini completion never
+changes formal quiz scores. Existing API/journal, School card and Matrix learning
+panel/HUD supply controls and presentation. The old ten-formal-quiz-attempt cap
+is removed; recent question context stays bounded and attempts stay saved.
+No new provider, asset creation or data migration is introduced. Physical Quest
+acceptance remains distinct from automated/native-model/browser checks.
+
 ### Point & Speak exhibit practice
 
 The owner's subsequent AR request adds a bounded part-identification practice

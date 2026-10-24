@@ -32,6 +32,8 @@ export interface Attempt {
   feedback: { objectiveId: string; prompt: string; correct: boolean; explanation: string }[];
 }
 export interface SchoolSession {
+  miniLesson?: MiniLesson;
+  miniLessonHistory?: MiniLesson[];
   practice?: { id:string; status:'active'|'complete'|'stopped'; objectId:string; objectLabel:string;
     index:number; total:number; found:number; streak:number; hints:number; roundId:string|null;
     question:string; feedback:string; replyId:string; lectureReplyId?:string|null;
@@ -62,6 +64,15 @@ export interface SchoolSession {
   assessments?: ConversationAssessment[];
   presentations?: PresentationRequest[];
   presentationRevision?: number;
+}
+
+export interface MiniLesson {
+  id: string; mode: 'guided' | 'free'; status: 'active' | 'paused' | 'complete' | 'needs_review';
+  phase: 'learn' | 'try' | 'reflect' | 'recap'; objective: Objective; title: string;
+  explanation: string; activity: string; reflection: string; currentPrompt?: string;
+  feedback: string; recap: string; nextStep: string; followUp: string; replyId: string | null;
+  attempts: { try: number; reflect: number };
+  evidence: { phase: string; eventId: string; quote: string; reason: string }[];
 }
 
 // Teaching emits inert requests. The local Operator bridge submits only explicit

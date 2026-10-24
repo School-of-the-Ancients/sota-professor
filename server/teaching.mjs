@@ -12,6 +12,7 @@ import { avatarCue } from './embodiment.mjs';
 import {publicPractice} from './point-practice.mjs';
 import {publicSocraticPractice} from './socratic-practice.mjs';
 import {recentContext} from './context-window.mjs';
+import {miniActive, miniContext, advanceMiniLesson, respondMiniLesson} from './mini-lesson.mjs';
 const practiceView=value=>value?.mode==='socratic'?publicSocraticPractice(value):publicPractice(value);
 
 export class SchoolError extends Error {
@@ -104,6 +105,7 @@ const context = session => ({
       environment: request.operator.environment, interactionVerified: false })),
   assessmentFeedback: session.attempts.at(-1)?.feedback ?? [],
   exhibitPractice:practiceView(session.practice),
+  miniLesson:miniContext(session),
   practiceGuidance: 'Only exhibitPractice with status active means the tracked interactive activity has started. Never claim you started a quiz, changed mode, or awarded a practice milestone from ordinary conversation. If a learner asks to start interactive practice but exhibitPractice is not active, direct them to the Explore & Reason control in the lesson menu; do not imitate the activity with an open-ended chain of questions.',
   completionGuidance: 'Teach objectives and offer a check when appropriate. Only server scoring can mark this short check complete. Conversation review is independent and cannot establish lasting mastery. Never announce completion before a submitted check.',
 });
@@ -134,7 +136,7 @@ function preferences(value = defaultPreferences) {
   400, 'Choose a valid difficulty, learning style and optional time budget.');
   return structuredClone(value);
 }
-function applyTurn(session, turn, replyTo = null) {
+export function applyTurn(session, turn, replyTo = null) {
   journal(session);
   const records = presentationRecords(turn.presentationRequests || [], session);
   requireValue((session.presentations?.length || 0) + records.length <= 40, 422, 'This quest has reached its presentation request limit. No media was created.');
@@ -172,6 +174,7 @@ export async function createSession(provider, input, customTeachers = [], onSele
 }
 
 export async function advanceSession(provider, existing, action, input, conversationEventId = null, scene = null, visual = null) {
+  if (action === 'mini-lesson') return advanceMiniLesson(provider, existing, input);
   requireValue(input && Number.isInteger(input.revision) && input.revision === existing.revision, 409, 'This session changed. Reopen it before trying again.');
   const session = structuredClone(existing);
   session.mentor = restoreMentor(session.mentor);
@@ -182,12 +185,15 @@ export async function advanceSession(provider, existing, action, input, conversa
     if (!conversationEventId) journal(session);
     session.messages.push({ role: 'user', text: input.text.trim() });
     if (!conversationEventId) appendEvent(session, { id: turnId, speaker: 'learner', recipient: 'professor', inputKind: 'text', text: input.text.trim(), worldId: '' }, true);
-    const turn = await teachingTurn(provider, session, session.status === 'needs_review'
+    const guided = miniActive(session);
+    const turn = guided ? await respondMiniLesson(provider, session, input.text.trim(), turnId, scene)
+      : await teachingTurn(provider, session, session.status === 'needs_review'
       ? 'Respond to the learner’s latest answer and focus on one missed concept using the feedback. Give one short hint or a small example and at most one question, then wait. Use an existing relevant exhibit if supported. Do not award completion.'
       : 'Respond to the learner’s latest answer or request, then offer one useful next step. Prefer observing or using an existing relevant exhibit over lecturing. Ask at most one focused question and wait; do not give its answer. Follow the requested level of detail and do not award completion.', scene,visual,
       journal(session).events.find(event=>event.id===turnId)?.surfaceReference);
     applyTurn(session, turn, turnId);
-    if (session.status === 'needs_review') session.reviewCompleted = true;
+    if (guided) session.miniLesson.replyId = `reply:${turnId}`;
+    if (!guided && session.status === 'needs_review') session.reviewCompleted = true;
   } else if (action === 'assess') {
     requireValue(exact(input, ['revision']), 400, 'Invalid conversation assessment request.');
     requireValue((session.assessments?.length || 0) < 10, 422, 'This quest has reached its conversation review limit.');
@@ -204,10 +210,10 @@ export async function advanceSession(provider, existing, action, input, conversa
     checkPresentation(session, input.requestId);
   } else if (action === 'quiz') {
     requireValue(exact(input, ['revision']), 400, 'Invalid quiz request.');
+    requireValue(!miniActive(session), 409, 'Pause or finish the mini-lesson before starting a formal quiz.');
     requireValue(session.status === 'learning' || (session.status === 'needs_review' && session.reviewCompleted), 409, 'Review the missed concepts with your mentor before requesting another quiz.');
     requireValue(session.messages.some(message => message.role === 'user'), 409, 'Discuss your goal with your mentor before taking the quiz.');
-    requireValue(session.attempts.length < 10, 422, 'This quest has reached its assessment limit. Start a new quest to continue.');
-    const previousQuestions = session.attempts.flatMap(attempt => attempt.feedback.map(item => item.prompt));
+    const previousQuestions = session.attempts.slice(-10).flatMap(attempt => attempt.feedback.map(item => item.prompt));
     const questions = validateQuiz(await provider.generate('quiz', { ...context(session), previousQuestions }), session.objectives, previousQuestions);
     session.quiz = { id: randomUUID(), questions };
     session.status = 'quiz';

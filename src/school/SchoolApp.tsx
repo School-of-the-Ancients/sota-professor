@@ -1,3 +1,4 @@
+import { MiniLessonCard } from './MiniLessonCard';
 import React, { useEffect, useRef, useState } from 'react';
 import { CHARACTERS, QUESTS } from '../../constants';
 import { schoolApi, type ProviderStatus, type SessionSummary } from './api';
@@ -238,6 +239,7 @@ const SchoolApp: React.FC = () => {
             <details className="mt-4 text-sm" open><summary className="cursor-pointer text-stone-300">Three things to understand</summary>
               <ol className="mt-2 list-decimal space-y-1 pl-5 text-stone-400">{session.objectives.map(objective => <li key={objective.id}>{objective.label}</li>)}</ol></details>
           </section>
+          <MiniLessonCard session={session} busy={busy || !provider?.configured} onAction={action => void run(() => schoolApi.action(session, 'mini-lesson', { action, requestId: crypto.randomUUID() }))} />
           <section aria-label="Teaching conversation" className="space-y-5">
             {session.operatorTasks?.length ? <section aria-label="Delegated Operator tasks" className="rounded-xl border border-teal-800 p-4">
               <h3>Operator tasks · continue the conversation while they run</h3>
@@ -285,7 +287,7 @@ const SchoolApp: React.FC = () => {
               <label htmlFor="reply" className="block text-sm font-bold text-stone-100">Continue the conversation</label>
               <textarea id="reply" rows={3} maxLength={4000} value={draft} onChange={event => setDraft(event.target.value)} disabled={busy} className={input} placeholder="Share your thinking or ask a question…" />
               <div className="flex flex-wrap gap-3"><button className={button} disabled={busy || !provider?.configured || !draft.trim()}>{busy ? 'Your mentor is thinking…' : 'Send message'}</button>
-                {(session.status === 'learning' || (session.status === 'needs_review' && session.reviewCompleted)) && <button type="button" className={secondary} disabled={busy || !provider?.configured || !session.messages.some(message => message.role === 'user')}
+                {!(session.miniLesson?.mode === 'guided' && session.miniLesson.status === 'active') && (session.status === 'learning' || (session.status === 'needs_review' && session.reviewCompleted)) && <button type="button" className={secondary} disabled={busy || !provider?.configured || !session.messages.some(message => message.role === 'user')}
                   onClick={() => void run(() => schoolApi.action(session, 'quiz'))}>{session.status === 'needs_review' ? 'Try a fresh knowledge check' : 'Ready for a knowledge check'}</button>}
                 {session.status === 'complete' && <button type="button" className={secondary} disabled={busy} onClick={newQuest}>Explore another question</button>}
               </div>
