@@ -238,3 +238,13 @@ mode. Formal quiz scores, scene state, identities and archives are unchanged.
 Validation includes malformed-evidence rejection, stale scene/round handling,
 idempotency, voice journal reuse, transfer selections and native-provider review
 in a synthetic lesson. Physical wearer acceptance remains separate.
+
+### Continuous conversations
+
+The owner requested removal of conversation turn limits. Remove the 81-message
+teaching cap, 100-turn/attempt practice caps and 5000-event journal cap. Keep the
+complete saved transcript and all scores; send a bounded recent-history window
+to teaching rather than eventually failing on accumulated prompt size. Existing
+input validation, request rate protection and archive byte-size safety remain.
+Regression coverage continues long lessons, large journals and both practice
+modes past their former limits while checking history retention and prompt size.

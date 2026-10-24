@@ -13,6 +13,14 @@ test('legacy messages survive journal migration; retries cannot alter event iden
   assert.throws(()=>appendEvent(session,{...event,text:'Delete everything'}),/identity changed/);
   assert.throws(()=>appendEvent(session,{...event,id:'fake',speaker:'professor'}),/speaker/);
 });
+
+test('a transcript beyond 5000 events still accepts new turns and keeps prior events',()=>{
+  const session={conversation:{version:1,events:Array.from({length:5000},(_,i)=>({id:`old-${i}`,text:'Saved.'}))}};
+  const event={id:'next',speaker:'learner',recipient:'professor',inputKind:'text',text:'Keep talking.',worldId:''};
+  appendEvent(session,event);assert.equal(session.conversation.events.length,5001);
+  assert.equal(session.conversation.events[0].id,'old-0');
+  appendEvent(session,event);assert.equal(session.conversation.events.length,5001);
+});
 test('shared Operator context reaches the teacher without becoming learner assessment evidence',async()=>{
   const provider=mockProvider();const generate=provider.generate.bind(provider);let context;
   provider.generate=async(kind,input)=>{if(kind==='teach')context=input;return generate(kind,input);};

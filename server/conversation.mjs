@@ -1,5 +1,6 @@
 // The journal is lesson history, never a command queue or assessment evidence.
 import {validSurface} from './surface-visual.mjs';
+import {recentContext} from './context-window.mjs';
 export function journal(session) {
   if (!session.conversation) session.conversation = { version: 1, events: (session.messages || []).map((message, index) => ({
     id: `legacy:${session.id}:${index}`, speaker: message.role === 'user' ? 'learner' : 'professor',
@@ -33,7 +34,6 @@ export function appendEvent(session, value, trusted = false) {
       key==='partReference'?Object.keys(value[key]).some(field=>existing[key]?.[field]!==value[key][field]):existing[key]!==value[key])) fail('Conversation event identity changed.');
     return existing;
   }
-  if (events.length >= 5000) { const error = new Error('This conversation archive is full. Export it before starting a new lesson.'); error.status = 422; throw error; }
   const event = { ...value, createdAt: new Date().toISOString(), delivery: 'text' };
   events.push(event); return event;
 }
@@ -47,6 +47,6 @@ export function markDelivery(session, value) {
   event.delivery = value.delivery;
 }
 export function conversationContext(session) {
-  return journal(session).events.slice(-60).map(({ id, speaker, recipient, text, delivery, worldId,partReference,surfaceReference }) =>
-    ({ id, speaker, recipient, text, delivery, worldId,...(partReference?{partReference}:{}),...(surfaceReference?{surfaceReference}:{}) }));
+  return recentContext(journal(session).events.slice(-60).map(({ id, speaker, recipient, text, delivery, worldId,partReference,surfaceReference }) =>
+    ({ id, speaker, recipient, text, delivery, worldId,...(partReference?{partReference}:{}),...(surfaceReference?{surfaceReference}:{}) })),{maxItems:60});
 }

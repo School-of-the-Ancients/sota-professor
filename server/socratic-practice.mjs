@@ -2,6 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {appendEvent} from './conversation.mjs';
 import {advancePointPractice,publicPractice} from './point-practice.mjs';
 import {interactionProblems,interactionSettings} from './teaching-interaction.mjs';
+import {recentContext} from './context-window.mjs';
 
 const requireValue=(ok,message,status=409)=>{if(!ok){const error=new Error(message);error.status=status;throw error;}};
 const stages=['observe','explain','predict','transfer'];
@@ -30,7 +31,7 @@ function context(session,practice,scene,task,learnerText=''){
       .map(({partId,label,description})=>({partId,label:clean(label),description:description?.slice(0,1800)}))},
     otherExhibits:(scene.objects||[]).filter(o=>o.objectId!==object.objectId&&o.parts?.length).slice(0,3)
       .map(o=>({label:o.label,parts:o.parts.filter(p=>p.provenance==='authored').slice(0,6).map(({label,description})=>({label:clean(label),description:description?.slice(0,500)}))})),
-    recentTurns:practice.turns.slice(-8),attemptsAtStage:practice.attemptsAtStage,
+    recentTurns:recentContext(practice.turns,{maxItems:8,maxBytes:16000}),attemptsAtStage:practice.attemptsAtStage,
     hints:practice.hints,milestones:practice.milestones.map(({label})=>label)};
 }
 async function generate(provider,data){
@@ -128,7 +129,6 @@ export async function advancePractice(provider,existing,input,scene){
   if(p.stage==='observe'){
     p.milestones.push({label:badges.observe,reason:'Chose a part while explaining; correctness not inferred.'});p.stage='explain';
   }
-  requireValue(p.turns.length<100,'This activity has reached its turn limit. Pause and start a new activity.');
   const text=input.text.trim(),reply=await generate(provider,context(session,p,scene,'review',text));
   const saved=input.eventId?session.conversation?.events.find(e=>e.id===input.eventId):null;
   if(input.eventId)requireValue(saved&&saved.speaker==='learner'&&saved.recipient==='professor'&&saved.text.trim()===text,

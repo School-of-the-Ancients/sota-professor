@@ -11,6 +11,7 @@ import { interactionSettings, interactionProblems } from './teaching-interaction
 import { avatarCue } from './embodiment.mjs';
 import {publicPractice} from './point-practice.mjs';
 import {publicSocraticPractice} from './socratic-practice.mjs';
+import {recentContext} from './context-window.mjs';
 const practiceView=value=>value?.mode==='socratic'?publicSocraticPractice(value):publicPractice(value);
 
 export class SchoolError extends Error {
@@ -84,7 +85,9 @@ const context = session => ({
   interaction: interactionSettings(session.messages),
   goal: session.goal, title: session.title, description: session.description || '', durationEstimate: session.durationEstimate || '',
   preferences: session.preferences || defaultPreferences, mentor: restoreMentor(session.mentor), objectives: session.objectives,
-  messages: session.messages, missedObjectiveIds: session.attempts.at(-1)?.missedObjectiveIds ?? [],
+  messages: recentContext(session.messages), missedObjectiveIds: session.attempts.at(-1)?.missedObjectiveIds ?? [],
+  historyWindow:{totalMessages:session.messages.length,fullTranscriptStored:true,
+    guidance:'This request includes recent conversation within an input budget. Earlier turns remain saved but may be omitted here. Do not pretend to remember omitted details; ask for clarification when needed.'},
   sharedConversation: conversationContext(session),
   appearance: session.appearance ? {status:session.appearance.status||'ready',reason:session.appearance.reason,catalogId:session.appearance.catalogId} : null,
   operatorTasks: (session.operatorTasks||[]).slice(-8).map(({id,title,status,execution})=>({id,title,status,
@@ -175,7 +178,6 @@ export async function advanceSession(provider, existing, action, input, conversa
   if (action === 'message') {
     requireValue(exact(input, ['revision', 'text']) && text(input.text, 4000), 400, 'Enter a message up to 4,000 characters.');
     requireValue(session.status !== 'quiz'||session.practice, 409, 'Submit the current quiz before continuing the conversation.');
-    requireValue(session.messages.length < 81, 422, 'This quest has reached its conversation limit. Start a new quest; the full session remains saved.');
     const turnId = conversationEventId || randomUUID();
     if (!conversationEventId) journal(session);
     session.messages.push({ role: 'user', text: input.text.trim() });

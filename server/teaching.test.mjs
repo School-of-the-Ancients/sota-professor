@@ -2,10 +2,25 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createSession, advanceSession, publicSession, validatePlan, validateQuiz } from './teaching.mjs';
 import { mockProvider, quiz, plan } from './fixtures.mjs';
+import {teachingPrompt} from './schemas.mjs';
 
 const begin = provider => createSession(provider, { goal: 'Help me understand algorithms.', mentor: '' });
 const message = (provider, session, text = 'I think the answer is 9. Why?') => advanceSession(provider, session, 'message', { revision: session.revision, text });
 const check = (provider, session) => advanceSession(provider, session, 'quiz', { revision: session.revision });
+
+test('long lessons continue beyond the old turn cap with bounded model input and the full history preserved',async()=>{
+  const provider=mockProvider();let session=await begin(provider);
+  const history=Array.from({length:300},(_,i)=>({role:i%2?'assistant':'user',text:`Saved turn ${i}: `+'🙂'.repeat(1700)}));
+  session.messages=structuredClone(history);
+  session.conversation.events=history.map((m,i)=>({id:`old-${i}`,speaker:m.role==='user'?'learner':'professor',recipient:m.role==='user'?'professor':'learner',text:m.text,inputKind:'text',delivery:'text',worldId:''}));
+  session=await message(provider,session,'Continue this same lesson with a new example.');
+  const input=provider.calls.at(-1).context;
+  assert.equal(session.messages.length,302);assert.deepEqual(session.messages.slice(0,300),history);
+  assert.equal(input.messages.at(-1).text,'Continue this same lesson with a new example.');
+  assert.equal(input.historyWindow.totalMessages,301);
+  assert(Buffer.byteLength(teachingPrompt('teach',input))<160000);
+  assert.deepEqual(publicSession(session).messages.slice(0,300),history);
+});
 const answers = (provider, session, miss = false) => advanceSession(provider, session, 'answers', {
   revision: session.revision, quizId: session.quiz.id,
   answers: Object.fromEntries(session.quiz.questions.map((question, index) => [question.id, miss && index === 1 ? (question.answer + 1) % question.options.length : question.answer])),

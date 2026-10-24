@@ -21,6 +21,16 @@ test('an explicit practice request can start after the ordinary conversation lim
   assert.deepEqual(started.messages,original.messages);assert.deepEqual(started.quiz,original.quiz);
 });
 
+test('Socratic dialogue continues beyond 100 practice turns without discarding its record',async()=>{
+  const provider=mockProvider();let s=await act(provider,initial(),'start');
+  s=await act(provider,s,'answer',{partReference:ref('pedal')});
+  const old=Array.from({length:110},(_,i)=>({stage:'explain',eventId:`saved-${i}`,text:'Earlier reasoning.'}));
+  s.practice.turns=structuredClone(old);
+  s=await act(provider,s,'respond',{text:'Pushing the pedal supplies motion through the mechanism.'});
+  assert.equal(s.practice.stage,'predict');assert.deepEqual(s.practice.turns.slice(0,110),old);
+  assert.equal(s.practice.turns.length,111);
+});
+
 test('new dialogue preserves legacy practice, and transfer can reference another current exhibit',async()=>{
   const provider=mockProvider(),world=scene();
   let s=advancePointPractice(initial(),{action:'start',revision:1,requestId:'legacy'},world);

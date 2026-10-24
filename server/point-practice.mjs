@@ -82,7 +82,6 @@ export function advancePointPractice(existing,input,scene){
         const correct=selected.objectId===practice.objectId&&matchingPracticePart(practice.rounds[practice.index],part);
         const feedback=correct?`Yes, that's it!`:`That's the ${cleanLabel(part.label)}. Try again.`;
         practice.attempts.push({requestId:input.requestId,roundId:input.roundId,partReference:structuredClone(reference),correct});
-        requireValue(practice.attempts.length<=100,'This practice has reached its attempt limit. Start a new practice.');
         appendEvent(session,{id:`practice-input:${input.requestId}`,speaker:'learner',recipient:'professor',inputKind:'text',
           text:`Pointed to ${part.label}.`,worldId:scene.roomId,partReference:reference});
         practice.streak=correct?practice.streak+1:0;

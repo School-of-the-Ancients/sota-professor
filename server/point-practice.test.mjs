@@ -19,6 +19,13 @@ function answer(s,partId,requestId='answer',source=scene()){
   return advancePointPractice(s,{revision:s.revision,action:'answer',requestId,practiceId:s.practice.id,roundId:s.practice.rounds[s.practice.index].id,
     partReference:{objectId:'exhibit',assetId:'asset',partsRevision:'a'.repeat(64),partId}},source);
 }
+
+test('legacy practice can retry beyond 100 attempts without resetting progress',()=>{
+  let s=start(session());
+  for(let i=0;i<101;i++)s=answer(s,'wing',`try-${i}`);
+  assert.equal(s.practice.attempts.length,101);assert.equal(s.practice.found.length,0);
+  s=answer(s,'handle','found');assert.equal(s.practice.found.length,1);
+});
 test('teach then point, wrong answer, retry and next round preserve formal assessment and source scene',()=>{
   const original=session(),s=start(original),before=structuredClone(scene());
   assert.equal(s.practice.rounds[0].partId,'handle');assert.match(s.conversation.events.at(-2).text,/handle supplies input/);assert.match(s.conversation.events.at(-1).text,/Find the Handle/);
