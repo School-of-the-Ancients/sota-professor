@@ -1,5 +1,11 @@
 # Asynchronous Matrix Operator tool
 
+## Professor appearance
+
+**Automatic match** uses the registered human catalog: curated matches for familiar historical figures, otherwise one bounded teaching-model choice based on the teacher and available visual descriptors. Riko and other uncurated imports remain manual choices. Picking an individual model pins it in the saved lesson; selecting Automatic again requests a new match. The chosen name and reason are shown before placement. This is an approximate representation, never an exact portrait claim.
+
+Press **Update professor appearance** to apply a different model to an existing avatar without replacing the lesson, transcript, voice, object ID or transform. Selecting a model alone does not change the world or interrupt speech. New models are registered by the existing Matrix launcher; they are original geometric characters using the project license, with no downloaded character assets.
+
 The teacher's structured response may contain one `toolCalls` entry named `matrix_operator`, with `title`, `instruction` and `objectiveId` arguments. The server checks its shape, bounds and actual lesson objective, then persists a task linked to the teaching reply. Direct PC tools remain disabled in the teaching provider.
 
 The Matrix client submits that task to the existing Operator queue and immediately leaves the lesson available for conversation. School's `operator-task-result` endpoint verifies the real Matrix task before updating the lesson. Requested, queued, running, completed, cancelled, failed and unconfirmed are distinct. A completed Operator turn is an attributed report, not independent proof of world geometry or scientific validity. The next teaching context receives the result; task requests and status are preserved in the shared journal.

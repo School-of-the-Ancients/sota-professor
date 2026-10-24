@@ -46,6 +46,11 @@ const SchoolApp: React.FC = () => {
     const saved=currentSession.current;if(!saved||busyRef.current)return;
     const next=await schoolApi.open(saved.id);
     setSession(previous=>previous?.id===next.id&&next.revision>=previous.revision?next:previous);
+  }, async(mode,catalogId)=>{
+    const saved=currentSession.current;if(!saved||busyRef.current)throw Error('Finish the current teaching turn before changing appearance.');
+    const next=await schoolApi.action(saved,'appearance',{mode,...(mode==='manual'?{catalogId}:{})});
+    setSession(previous=>previous?.id===next.id&&next.revision>=previous.revision?next:previous);
+    return next;
   });
   const preparingExhibit = session?.presentations?.some(request => request.preparation?.status === 'preparing') || false;
 
@@ -216,11 +221,13 @@ const SchoolApp: React.FC = () => {
             <h1 className="font-serif text-3xl text-stone-100">{session.title}</h1>
             <p className="mt-3 text-sm text-stone-400">Your goal: {session.goal}</p>
             {operator.connected && <div className="mt-4 flex flex-wrap items-center gap-3">
-              <label className="text-sm">Professor appearance <select aria-label="Professor appearance" className={input} value={operator.avatarId} onChange={event=>operator.setAvatarId(event.target.value)}>
+              <label className="text-sm">Professor appearance <select aria-label="Professor appearance" className={input} disabled={busy||operator.matching||operator.placing} value={session.appearance?.mode==='manual'?operator.avatarId:'auto'} onChange={event=>void operator.selectAppearance(event.target.value)}>
+                <option value="auto">Automatic match for {session.mentor.name}</option>
                 {operator.avatars.map(avatar=><option key={avatar.catalogId} value={avatar.catalogId}>{avatar.displayName}</option>)}
               </select></label>
-              <button className={secondary} disabled={busy||operator.placing||!operator.avatars.length} onClick={operator.placeProfessor}>{operator.placing?'Placing professor…':'Place professor in Matrix'}</button>
-              <p className="text-xs text-stone-400">A stylized representation; appearance does not change your teacher or lesson.</p>
+              {session.appearance?.mode!=='manual'&&<button className={secondary} disabled={busy||operator.matching||operator.placing} onClick={()=>void operator.selectAppearance('auto')}>Match again</button>}
+              <button className={secondary} disabled={busy||operator.placing||operator.matching||!operator.avatars.length} onClick={operator.placeProfessor}>{operator.matching?'Matching appearance…':operator.placing?'Updating professor…':operator.hasProfessor?'Update professor appearance':'Place professor in Matrix'}</button>
+              <div className="text-xs text-stone-400"><p>{operator.avatars.find(avatar=>avatar.catalogId===operator.avatarId)?.displayName} — {session.appearance?.reason||'Choose a model or automatic matching.'}</p><p>A stylized stand-in, not an exact historical likeness. Your teacher, voice and lesson stay the same.</p></div>
             </div>}
             <div className="mt-5 rounded-xl bg-stone-800/60 p-4"><h2 className="font-serif text-xl text-amber-100">{session.mentor.name}</h2>
               <p className="mt-1 text-xs text-stone-400">{session.mentor.era} · {session.mentor.expertise} · AI interpretation</p>
