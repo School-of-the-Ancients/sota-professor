@@ -2,15 +2,27 @@ import {randomUUID} from 'node:crypto';
 import {appendEvent} from './conversation.mjs';
 
 const requireValue=(condition,message,status=409)=>{if(!condition){const error=new Error(message);error.status=status;throw error;}};
-const cleanLabel=label=>label.replace(/^.*?\b[1-9]\s*[-–]\s*/,'').trim();
+const cleanLabel=label=>label.replace(/^.*?\b[1-9]\s*[-–]\s*/,'').replace(/\s*\(input\)\s*$/i,'').trim();
+export function matchingPracticePart(round,part){
+  if(round.partId===part.partId)return true;
+  // A generic prompt accepts the explicitly paired counterpart. A prompt that
+  // names left/right still requires the exact side. Do not fuzzy-match parts.
+  if(/\b(?:left|right)\b/i.test(round.label))return false;
+  const expected=/^(left|right)[_-](.+)$/.exec(round.partId),actual=/^(left|right)[_-](.+)$/.exec(part.partId);
+  return !!expected&&!!actual&&expected[1]!==actual[1]&&expected[2]===actual[2];
+}
+const spokenDescription=description=>{
+  const content=description.replace(/^[^.]*illustrative transmission path, step \d+ of \d+:[^.]*\.\s*/i,'').trim();
+  return content.match(/^.*?[.!?](?:\s|$)/)?.[0].trim()||content;
+};
 const currentPart=(practice,scene)=>{
   const object=scene?.objects?.find(o=>o.objectId===practice.objectId&&o.assetId===practice.assetId&&o.partsRevision===practice.partsRevision);
   return object?.parts?.find(p=>p.partId===practice.rounds[practice.index]?.partId);
 };
-const question=(practice)=>`Point to the ${practice.rounds[practice.index].label}. Press A or X when you have found it.`;
+const question=(practice)=>`Find the ${cleanLabel(practice.rounds[practice.index].label)}. Point and press A or X.`;
 const explain=(practice)=>{
   const round=practice.rounds[practice.index];
-  return `${round.label}. ${round.description} Now, ${question(practice)}`;
+  return `${cleanLabel(round.label)}. ${spokenDescription(round.description)} Now, ${question(practice)}`;
 };
 export function publicPractice(value){
   if(!value)return null;
@@ -49,7 +61,7 @@ export function advancePointPractice(existing,input,scene){
       objectId:object.objectId,assetId:object.assetId,partsRevision:object.partsRevision,objectLabel:object.label,
       rounds:parts.map(p=>({id:randomUUID(),partId:p.partId,label:cleanLabel(p.label),description:p.description})),
       index:0,found:[],streak:0,hints:0,attempts:[],requests:[],feedback:'',replyId:null};
-    speech=`Let's explore the ${object.label}. I will explain a part, then you find it. ${explain(practice)}`;
+    speech=`Let's explore the ${object.label}. This is an illustrative model. I will explain a part, then you find it. ${explain(practice)}`;
     }
   }else{
     requireValue(practice&&practice.id===input.practiceId,'This practice session changed. Refresh it.');
@@ -67,8 +79,8 @@ export function advancePointPractice(existing,input,scene){
         const selected=scene.objects.find(o=>o.objectId===reference?.objectId&&o.assetId===reference?.assetId&&o.partsRevision===reference?.partsRevision);
         const part=selected?.parts?.find(p=>p.partId===reference?.partId);
         requireValue(part,'That selected part is no longer available. Point again.');
-        const correct=selected.objectId===practice.objectId&&part.partId===practice.rounds[practice.index].partId;
-        const feedback=correct?`Yes, that's the ${practice.rounds[practice.index].label}.`:`You selected ${cleanLabel(part.label)}. Try the ${practice.rounds[practice.index].label}.`;
+        const correct=selected.objectId===practice.objectId&&matchingPracticePart(practice.rounds[practice.index],part);
+        const feedback=correct?`Yes, that's it!`:`That's the ${cleanLabel(part.label)}. Try again.`;
         practice.attempts.push({requestId:input.requestId,roundId:input.roundId,partReference:structuredClone(reference),correct});
         requireValue(practice.attempts.length<=100,'This practice has reached its attempt limit. Start a new practice.');
         appendEvent(session,{id:`practice-input:${input.requestId}`,speaker:'learner',recipient:'professor',inputKind:'text',

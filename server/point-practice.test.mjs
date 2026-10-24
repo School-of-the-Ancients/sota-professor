@@ -4,7 +4,7 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createServer} from 'node:http';
-import {advancePointPractice,publicPractice} from './point-practice.mjs';
+import {advancePointPractice,publicPractice,matchingPracticePart} from './point-practice.mjs';
 import {SessionStore} from './store.mjs';
 import {createSchoolApi} from './http.mjs';
 import {mockProvider} from './fixtures.mjs';
@@ -21,7 +21,7 @@ function answer(s,partId,requestId='answer',source=scene()){
 }
 test('teach then point, wrong answer, retry and next round preserve formal assessment and source scene',()=>{
   const original=session(),s=start(original),before=structuredClone(scene());
-  assert.equal(s.practice.rounds[0].partId,'handle');assert.match(s.conversation.events.at(-2).text,/handle supplies input/);assert.match(s.conversation.events.at(-1).text,/Point to the Handle/);
+  assert.equal(s.practice.rounds[0].partId,'handle');assert.match(s.conversation.events.at(-2).text,/handle supplies input/);assert.match(s.conversation.events.at(-1).text,/Find the Handle/);
   const wrong=answer(s,'wing');assert.equal(wrong.practice.found.length,0);assert.equal(wrong.practice.index,0);
   const correct=answer(wrong,'handle','retry');assert.equal(correct.practice.index,1);assert.equal(correct.practice.found.length,1);
   assert.match(correct.conversation.events.at(-2).text,/shaft transfers rotation/);
@@ -31,6 +31,26 @@ test('teach then point, wrong answer, retry and next round preserve formal asses
   assert.deepEqual(done.quiz,original.quiz);assert.deepEqual(done.attempts,[]);assert.equal(done.status,'quiz');
   assert.deepEqual(scene(),before);assert.equal(original.practice,undefined);
   assert.equal(publicPractice(done.practice).found,3);assert.equal(publicPractice(done.practice).rounds,undefined);
+});
+
+test('a generic pilot-pedal prompt accepts either explicit counterpart and never another part or side-specific target',()=>{
+  const target={partId:'left-pedal',label:'Pilot pedal (input)'};
+  assert.equal(matchingPracticePart(target,{partId:'right-pedal'}),true);
+  assert.equal(matchingPracticePart(target,{partId:'left-pedal'}),true);
+  assert.equal(matchingPracticePart(target,{partId:'right-crank'}),false);
+  assert.equal(matchingPracticePart({...target,label:'Left pilot pedal'},{partId:'right-pedal'}),false);
+  const source=scene();source.objects[0].parts=[
+    {...source.objects[0].parts[0],partId:'left-pedal',label:'Machine 1 - Pilot pedal (input)',description:'MACHINE, illustrative transmission path, step 1 of 3: pedal -> linkage. The pilot pushes this foot pedal. Illustrative only.'},
+    {...source.objects[0].parts[0],partId:'right-pedal',label:'Right pilot pedal'},
+    {...source.objects[0].parts[2]}];
+  const initial=advancePointPractice(session(),{action:'start',requestId:'pedals',revision:1},source);
+  assert.match(publicPractice(initial.practice).question,/Find the Pilot pedal\./);
+  assert.doesNotMatch(initial.conversation.events.at(-2).text,/transmission path|step 1/);
+  const result=advancePointPractice(initial,{action:'answer',requestId:'right-pedal-answer',revision:initial.revision,practiceId:initial.practice.id,
+    roundId:initial.practice.rounds[0].id,partReference:{objectId:'exhibit',assetId:'asset',partsRevision:'a'.repeat(64),partId:'right-pedal'}},source);
+  assert.equal(result.practice.found.length,1);assert.equal(result.practice.index,1);
+  const replay=advancePointPractice(result,{action:'answer',requestId:'right-pedal-answer',revision:initial.revision},source);
+  assert.equal(replay.practice.found.length,1);
 });
 test('changed objects, stale rounds, missing parts and unavailable worlds cannot earn points',()=>{
   const s=start(session());
